@@ -54,6 +54,7 @@ class VQADataset(data.Dataset):
 
         # Process Visual (image or features)
         # the preprocess script should have already saved these as Torch tensors
+        item["image_id"] = val["image_id"]
         item['visual'] = self.images_dataset[val["image_id"]]
 
         # Process Question (word token)
