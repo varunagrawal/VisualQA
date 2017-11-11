@@ -1,9 +1,11 @@
 import json
+import pickle
 from collections import Counter
 import torch
 import torch.utils.data as data
 import utils
 import os
+import numpy as np
 
 
 def coco_name_format(image_id, split):
@@ -35,32 +37,41 @@ class VQADataset(data.Dataset):
         self.images_dataset = torch.load(images_dataset)
         self.split = split
 
-        cache_file = "vqa_dataset_cache.json"
+        cache_file = "vqa_dataset_cache.pickle"
         if os.path.exists(cache_file):
             print("Found dataset cache! Loading...")
-            self.data = json.load(open(cache_file))
+            self.data, self.vocab = pickle.load(open(cache_file, 'rb'))
         else:
-            self.data = process_vqa_dataset(self.questions, self.annotations, split, args)
+            self.data, self.vocab = process_vqa_dataset(self.questions, self.annotations, split, args)
             print("Caching the processed data")
-            json.dump(self.data, open(cache_file, 'w+'))
+            pickle.dump([self.data, self.vocab], open(cache_file, 'wb+'))
+
+        self.embed_question = args.embed_question
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
-        val = self.data[index]
+        d = self.data[index]
 
         item = {}
 
         # Process Visual (image or features)
         # the preprocess script should have already saved these as Torch tensors
-        item["image_id"] = val["image_id"]
-        item['visual'] = self.images_dataset[val["image_id"]]
+        item["image_id"] = d["image_id"]
+        item['visual'] = self.images_dataset[d["image_id"]].squeeze()
 
         # Process Question (word token)
-        item['question_id'] = val['question_id']
-        item['question'] = torch.LongTensor(val['question_wids'])
-        item['answer_id'] = val['answer_id']
+        item['question_id'] = d['question_id']
+        if self.embed_question:
+            item['question'] = torch.from_numpy(d['question_wids'])
+        else:
+            one_hot_vec = np.zeros((len(d["question_wids"]), len(self.vocab)))
+            for k in range(len(d["question_wids"])):
+                one_hot_vec[k, d['question_wids'][k]] = 1
+            item['question'] = torch.from_numpy(one_hot_vec).float()
+
+        item['answer_id'] = d['answer_id']
 
         return item
 
@@ -70,7 +81,6 @@ def process_vqa_dataset(questions, annotations, split, args):
     Process the questions and annotations into a consolidated dataset
     :param questions:
     :param annotations:
-    :param images:
     :param split:
     :param args:
     :return: The processed dataset ready to be used
@@ -111,4 +121,4 @@ def process_vqa_dataset(questions, annotations, split, args):
 
     dataset = utils.encode_answers(dataset, ans_to_aid)
 
-    return dataset
+    return dataset, vocab
