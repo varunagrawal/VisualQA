@@ -22,12 +22,12 @@ def get_dataloader(annotations, questions, images, split, args, shuffle=True):
 
 class VQADataset(data.Dataset):
     def __init__(self, annotations, questions, images_dataset, split, args):
-        print("Loading annotations")
+        print("Loading {0} annotations".format(split))
         with open(annotations) as ann:
             j = json.load(ann)
             self.annotations = j["annotations"]
 
-        print("Loading questions")
+        print("Loading {0} questions".format(split))
         with open(questions) as q:
             j = json.load(q)
             self.questions = j["questions"]
@@ -37,7 +37,7 @@ class VQADataset(data.Dataset):
         self.images_dataset = torch.load(images_dataset)
         self.split = split
 
-        cache_file = "vqa_dataset_cache.pickle"
+        cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
         if os.path.exists(cache_file):
             print("Found dataset cache! Loading...")
             self.data, self.vocab = pickle.load(open(cache_file, 'rb'))
