@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Variable
 from metrics import accuracy
+import os, os.path as osp
 
 
 def train(model, dataloader, criterion, optimizer, epoch, args):
@@ -69,12 +70,15 @@ def evaluate(model, dataloader, criterion, epoch, args):
 
 
 def save_checkpoint(model, args, epoch):
+    if not osp.exists(args.save_dir):
+        os.makedirs(args.save_dir)
+
     state = {
         "model": model,
         "args": args
     }
     filename = 'vqa_checkpoint_{0}.pth.tar'.format(epoch)
-    torch.save(state, filename)
+    torch.save(state, osp.join(args.save_dir, filename))
 
 
 def print_state(idx, epoch, size, avg_loss, avg_acc):

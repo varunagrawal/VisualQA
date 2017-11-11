@@ -37,6 +37,7 @@ def parse_args():
     parser.add_argument("--print-freq", default=100, help="How frequently to print training stats")
     parser.add_argument("--batch_size", default=32)
     parser.add_argument('-j', "--num_workers", default=4)
+    parser.add_argument("--save_dir", default="weights", help="Directory where model weights are stored")
 
     args = parser.parse_args()
     return args
