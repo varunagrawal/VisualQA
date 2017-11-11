@@ -3,8 +3,9 @@ import argparse
 import dataset
 from models.model import DeeperLSTM
 import trainer
-import torch
+import visualize
 from torch import optim
+from torch.optim import lr_scheduler
 from torch import nn
 
 
@@ -32,12 +33,13 @@ def parse_args():
     parser.add_argument("--max_length", default=25, help="The maximum length to consider to each question")
     parser.add_argument("--epochs", default=50, help="Number of training epochs")
     parser.add_argument("--start_epoch", default=0, help="Starting epoch")
-    parser.add_argument('--lr', "--learning_rate", default=1e-4, help="Learning rate")
+    parser.add_argument('--lr', "--learning_rate", default=4e-4, help="Learning rate")
     parser.add_argument("--weight-decay", '--wd', default=0.0005, help="Optimizer weight decay")
     parser.add_argument("--print-freq", default=100, help="How frequently to print training stats")
-    parser.add_argument("--batch_size", default=32)
+    parser.add_argument("--batch_size", default=256)
     parser.add_argument('-j', "--num_workers", default=4)
     parser.add_argument("--save_dir", default="weights", help="Directory where model weights are stored")
+    parser.add_argument("--port", default=8097, help="The port for the Visdom server")
 
     args = parser.parse_args()
     return args
@@ -59,13 +61,18 @@ def main():
     model = DeeperLSTM(len(vocab))
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+
+    vis = visualize.Visualizer(args.port)
 
     print("Beginning training")
     print("#"*80)
 
     for epoch in range(args.start_epoch, args.epochs):
-        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args)
-        trainer.evaluate(model, val_loader, criterion, epoch, args)
+        scheduler.step()
+
+        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
+        trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
 
     print("Training complete!")
 

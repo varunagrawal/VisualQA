@@ -4,7 +4,7 @@ from metrics import accuracy
 import os, os.path as osp
 
 
-def train(model, dataloader, criterion, optimizer, epoch, args):
+def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     if torch.cuda.is_available():
         model.cuda()
 
@@ -29,19 +29,22 @@ def train(model, dataloader, criterion, optimizer, epoch, args):
         avg_loss.update(loss.data[0], q.size(0))
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc.data[0], q.size(0))
+        avg_acc.update(acc.data[0])
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
+        if vis:
+            vis.update_loss(loss, epoch, idx, len(dataloader), "loss")
+
         if idx > 0 and idx % args.print_freq == 0:
-            print_state(idx, epoch, len(dataloader.dataset), avg_loss, avg_acc)
+            print_state(idx, epoch, len(dataloader), avg_loss, avg_acc)
 
     save_checkpoint(model, args, epoch)
 
 
-def evaluate(model, dataloader, criterion, epoch, args):
+def evaluate(model, dataloader, criterion, epoch, args, vis=None):
     # switch to evaluate mode
     model.eval()
 
@@ -62,11 +65,15 @@ def evaluate(model, dataloader, criterion, epoch, args):
         loss = criterion(output, ans)
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc.data[0], q.size(0))
+        avg_acc.update(acc.data[0])
+
         avg_loss.update(loss.data[0], q.size(0))
 
+        if vis:
+            vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
+
         if i > 0 and i % args.print_freq == 0:
-            print_state(i, epoch, len(dataloader.datase), avg_loss, avg_acc)
+            print_state(i, epoch, len(dataloader), avg_loss, avg_acc)
 
 
 def save_checkpoint(model, args, epoch):
