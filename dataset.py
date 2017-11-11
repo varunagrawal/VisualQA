@@ -3,7 +3,7 @@ import pickle
 from collections import Counter
 import torch
 import torch.utils.data as data
-import utils
+from utils import text
 import os
 import numpy as np
 
@@ -103,22 +103,22 @@ def process_vqa_dataset(questions, annotations, split, args):
         dataset.append(d)
 
     # Get the top 1000 answers so we can filter the dataset to only questions with these answers
-    top_answers = utils.get_top_answers(dataset, args.top_answer_limit)
-    dataset = utils.filter_dataset(dataset, top_answers)
+    top_answers = text.get_top_answers(dataset, args.top_answer_limit)
+    dataset = text.filter_dataset(dataset, top_answers)
 
     # Process the questions
-    dataset = utils.preprocess_questions(dataset)
-    vocab = utils.get_vocabulary(dataset)
-    dataset = utils.remove_tail_words(dataset, vocab)
+    dataset = text.preprocess_questions(dataset)
+    vocab = text.get_vocabulary(dataset)
+    dataset = text.remove_tail_words(dataset, vocab)
 
     word_to_wid = {w:i for i, w in enumerate(vocab)}
     wid_to_word = [w for w in vocab]
 
-    dataset = utils.encode_questions(dataset, word_to_wid, args.max_length)
+    dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
 
     ans_to_aid = {a: i for i, a in enumerate(top_answers)}
     aid_to_ans = [a for a in top_answers]
 
-    dataset = utils.encode_answers(dataset, ans_to_aid)
+    dataset = text.encode_answers(dataset, ans_to_aid)
 
     return dataset, vocab

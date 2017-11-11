@@ -1,3 +1,9 @@
+"""
+Utils to help in text processing
+
+Author: Vaurn Agrawal (varunagrawal)
+"""
+
 import re
 from tqdm import tqdm
 import numpy as np
