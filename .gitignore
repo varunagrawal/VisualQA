@@ -104,3 +104,6 @@ ENV/
 .idea
 *.pth
 *.json
+
+weights/*
+*.pickle
