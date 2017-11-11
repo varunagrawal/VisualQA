@@ -1,5 +1,6 @@
 import re
 from tqdm import tqdm
+import numpy as np
 
 
 def tokenize(s):
@@ -49,14 +50,21 @@ def remove_tail_words(dataset, vocab):
 
 
 def encode_questions(dataset, word_to_wid, max_length=25):
+    """
+    Encode each question into a vector of size Max_Length x Vocab_Size
+    :param dataset:
+    :param word_to_wid:
+    :param max_length
+    :return:
+    """
     print("Encoding the questions")
     for idx, d in enumerate(tqdm(dataset)):
         d["question_length"] = min(len(d["question_words_UNK"]), max_length)
-        d["question_wids"] = [0]*max_length
+        d["question_wids"] = np.zeros(max_length, dtype=np.int32)
 
         for k, w in enumerate(d["question_words_UNK"]):
             if k < max_length:
-                d["question_wids"][k] = word_to_wid[w]
+                d["question_wids"][k] = int(word_to_wid[w])  # ensure it is an int so it can be used for indexing
                 d['seq_length'] = len(d['question_words_UNK'])
 
     return dataset
