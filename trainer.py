@@ -1,16 +1,17 @@
 import torch
 from torch.autograd import Variable
+from metrics import accuracy
 
 
 def train(model, dataloader, criterion, optimizer, epoch, args):
     if torch.cuda.is_available():
         model.cuda()
 
+    # Set the model to train mode
     model.train()
 
-    # TODO use average meter for loss
-    # TODO print average accuracy
-    losses = []
+    avg_loss = AverageMeter()
+    avg_acc = AverageMeter()
 
     for idx, sample in enumerate(dataloader):
         q = sample['question']
@@ -24,14 +25,17 @@ def train(model, dataloader, criterion, optimizer, epoch, args):
         output = model(img, q)
 
         loss = criterion(output, ans)
-        losses.append(loss.data[0])
+        avg_loss.update(loss.data[0], q.size(0))
+
+        acc = accuracy(output, ans)
+        avg_acc.update(acc.data[0], q.size(0))
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         if idx > 0 and idx % args.print_freq == 0:
-            print_state(idx, epoch, len(dataloader.dataset), losses=losses)
+            print_state(idx, epoch, len(dataloader.dataset), avg_loss, avg_acc)
 
     save_checkpoint(model, args, epoch)
 
@@ -40,7 +44,8 @@ def evaluate(model, dataloader, criterion, epoch, args):
     # switch to evaluate mode
     model.eval()
 
-    losses = []
+    avg_loss = AverageMeter()
+    avg_acc = AverageMeter()
 
     for i, sample in enumerate(dataloader):
         q = sample['question']
@@ -55,10 +60,12 @@ def evaluate(model, dataloader, criterion, epoch, args):
 
         loss = criterion(output, ans)
 
-        losses.append(loss.data[0])
+        acc = accuracy(output, ans)
+        avg_acc.update(acc.data[0], q.size(0))
+        avg_loss.update(loss.data[0], q.size(0))
 
         if i > 0 and i % args.print_freq == 0:
-            print_state(i, epoch, len(dataloader.datase), losses=losses)
+            print_state(i, epoch, len(dataloader.datase), avg_loss, avg_acc)
 
 
 def save_checkpoint(model, args, epoch):
@@ -70,15 +77,30 @@ def save_checkpoint(model, args, epoch):
     torch.save(state, filename)
 
 
-def print_state(idx, epoch, size, losses):
+def print_state(idx, epoch, size, avg_loss, avg_acc):
     if epoch >= 0:
-        message = "Epoch: [{0}][{1}/{2}]\t".format(epoch, idx, size)
+        message = "Epoch: [{0}][{1}/{2}]\t\t".format(epoch, idx, size)
     else:
-        message = "Test: [{0}/{1}]\t".format(idx, size)
-
-    avg_loss = sum(losses) / len(losses)
-    avg_acc = "Not Implemented"
+        message = "Test: [{0}/{1}]\t\t".format(idx, size)
 
     print(message +
-          'Avg Loss {loss} \t'
-          'Accuracy {acc}'.format(loss=avg_loss, acc=avg_acc))
+          'Loss {loss:.4f} \t'
+          'Accuracy {acc:.4f}'.format(loss=avg_loss.avg, acc=avg_acc.avg))
+
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
