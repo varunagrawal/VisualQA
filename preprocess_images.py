@@ -72,7 +72,7 @@ def main(file, root, split):
     for idx, (img, id) in enumerate(tqdm(data_loader, total=len(data_loader))):
         img_var = Variable(img).cuda()
         embedding = model(img_var)
-        embeddings[str(id[0, 0])] = embedding.data.cpu()
+        embeddings[id[0, 0]] = embedding.data.cpu()
 
     print("Done computing embeddings")
 
@@ -81,8 +81,8 @@ def main(file, root, split):
 
 parser = argparse.ArgumentParser("Preprocess COCO images")
 
-parser.add_argument("file", help="COCO annotations file")
-parser.add_argument("--root", help="The root directory of the train/val folders")
+parser.add_argument("file", help="Path to COCO annotations file")
+parser.add_argument("--root", help="Path to the train/val root directory of images")
 parser.add_argument("--split", default="train", choices=("train", "val"))
 
 args = parser.parse_args()
