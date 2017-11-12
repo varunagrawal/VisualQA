@@ -10,4 +10,4 @@ VAL_ANN=${ROOT}/v2_mscoco_val2014_annotations.json
 VAL_QUES=${ROOT}/v2_OpenEnded_mscoco_val2014_questions.json
 VAL_IMGS=image_embeddings/coco_val_vgg_fc7.pth
 
-python main.py TRAIN_ANN TRAIN_QUES TRAIN_IMGS VAL_ANN VAL_QUES VAL_IMGS
+python main.py $TRAIN_ANN $TRAIN_QUES $TRAIN_IMGS $VAL_ANN $VAL_QUES $VAL_IMGS

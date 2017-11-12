@@ -79,7 +79,7 @@ def main(file, root, split):
     torch.save(embeddings, "coco_{0}_vgg_fc7.pth".format(split))
 
 
-parser = argparse.ArgumentParser("Preprocess COCO images")
+parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
 
 parser.add_argument("file", help="Path to COCO annotations file")
 parser.add_argument("--root", help="Path to the train/val root directory of images")
