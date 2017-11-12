@@ -70,7 +70,7 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
             vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
 
         if i > 0 and i % args.print_freq == 0:
-            print_state(i, epoch, len(dataloader), avg_loss, avg_acc)
+            print_state(i, -1, len(dataloader), avg_loss, avg_acc)
 
 
 def save_checkpoint(model, args, epoch):

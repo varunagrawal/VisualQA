@@ -17,9 +17,9 @@ def parse_args():
     parser.add_argument("questions", metavar="TRAIN_QUES", help="The VQA questions JSON file")
     parser.add_argument("images", metavar="TRAIN_IMAGES",
                         help="The file containing torch tensors of the FC7 embeddings of COCO images")
-    parser.add_argument("val-annotations", metavar="VAL_ANN", help="The VQA val annotations JSON file")
-    parser.add_argument("val-questions", metavar="VAL_QUES", help="The VQA val questions JSON file")
-    parser.add_argument("val-images", metavar="VAL_IMAGES",
+    parser.add_argument("val_annotations", metavar="VAL_ANN", help="The VQA val annotations JSON file")
+    parser.add_argument("val_questions", metavar="VAL_QUES", help="The VQA val questions JSON file")
+    parser.add_argument("val_images", metavar="VAL_IMAGES",
                         help="The file containing torch tensors of the FC7 embeddings of val COCO images")
     parser.add_argument("--embed_question", action="store_true",
                         help="Return the question as a list of word IDs so we can use an embedding layer on it")
@@ -70,7 +70,7 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
 
-        # trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
+        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
         trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
         break
 
