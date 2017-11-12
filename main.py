@@ -13,21 +13,13 @@ from torch import nn
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--annotations", metavar="ANN",
-                        default="~/datasets/VQA2/v2_mscoco_train2014_annotations.json",
-                        help="The VQA annotations JSON file")
-    parser.add_argument("--questions", metavar="QUES",
-                        default="~/datasets/VQA2/v2_OpenEnded_mscoco_train2014_questions.json",
-                        help="The VQA questions JSON file")
-    parser.add_argument("--images", default="coco_train_vgg_fc7.pth",
+    parser.add_argument("annotations", metavar="TRAIN_ANN", help="The VQA annotations JSON file")
+    parser.add_argument("questions", metavar="TRAIN_QUES", help="The VQA questions JSON file")
+    parser.add_argument("images", metavar="TRAIN_IMAGES",
                         help="The file containing torch tensors of the FC7 embeddings of COCO images")
-    parser.add_argument("--val-annotations", metavar="ANN",
-                        default="~/datasets/VQA2/v2_mscoco_val2014_annotations.json",
-                        help="The VQA val annotations JSON file")
-    parser.add_argument("--val-questions", metavar="QUES",
-                        default="~/datasets/VQA2/v2_OpenEnded_mscoco_val2014_questions.json",
-                        help="The VQA val questions JSON file")
-    parser.add_argument("--val-images", default="coco_val_vgg_fc7.pth",
+    parser.add_argument("val-annotations", metavar="VAL_ANN", help="The VQA val annotations JSON file")
+    parser.add_argument("val-questions", metavar="VAL_QUES", help="The VQA val questions JSON file")
+    parser.add_argument("val-images", metavar="VAL_IMAGES",
                         help="The file containing torch tensors of the FC7 embeddings of val COCO images")
     parser.add_argument("--embed_question", action="store_true",
                         help="Return the question as a list of word IDs so we can use an embedding layer on it")
