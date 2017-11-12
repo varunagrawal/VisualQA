@@ -4,6 +4,7 @@ import dataset
 from models.model import DeeperLSTM
 import trainer
 import visualize
+import torch
 from torch import optim
 from torch.optim import lr_scheduler
 from torch import nn
@@ -28,7 +29,8 @@ def parse_args():
                         help="The VQA val questions JSON file")
     parser.add_argument("--val-images", default="coco_val_vgg_fc7.pth",
                         help="The file containing torch tensors of the FC7 embeddings of val COCO images")
-    parser.add_argument("--embed_question", action="store_true")
+    parser.add_argument("--embed_question", action="store_true",
+                        help="Return the question as a list of word IDs so we can use an embedding layer on it")
     parser.add_argument("--top_answer_limit", default=1000, help="The number of answers to consider as viable options")
     parser.add_argument("--max_length", default=25, help="The maximum length to consider to each question")
     parser.add_argument("--epochs", default=50, help="Number of training epochs")
@@ -51,14 +53,19 @@ def main():
     questions = osp.expanduser(args.questions)
 
     vqa_loader = dataset.get_dataloader(annotations, questions, args.images, "train", args)
+    # We always use the vocab from the training set
+    vocab = vqa_loader.dataset.vocab
 
     val_loader = dataset.get_dataloader(osp.expanduser(args.val_annotations),
                                         osp.expanduser(args.val_questions),
-                                        args.val_images,
-                                        "val", args)
+                                        args.val_images, "val",
+                                        args, vocab=vocab, shuffle=False)
 
-    vocab = vqa_loader.dataset.vocab
     model = DeeperLSTM(len(vocab))
+
+    if torch.cuda.is_available():
+        model.cuda()
+
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
@@ -71,8 +78,9 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
 
-        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
+        # trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
         trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
+        break
 
     print("Training complete!")
 

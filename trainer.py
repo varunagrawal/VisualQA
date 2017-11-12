@@ -5,9 +5,6 @@ import os, os.path as osp
 
 
 def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
-    if torch.cuda.is_available():
-        model.cuda()
-
     # Set the model to train mode
     model.train()
 

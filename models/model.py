@@ -57,6 +57,7 @@ class DeeperLSTM(nn.Module):
         img_features = self.image_embed(img)
 
         q = self.embedding(ques)  # BxTxD
+
         q = q.transpose(0, 1)  # makes this TxBxD
 
         # initialize the hidden state for each mini-batch

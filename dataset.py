@@ -13,15 +13,15 @@ def coco_name_format(image_id, split):
     return image_name
 
 
-def get_dataloader(annotations, questions, images, split, args, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, split, args),
+def get_dataloader(annotations, questions, images, split, args, vocab=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, split, args, vocab=vocab),
                                  batch_size=args.batch_size,
                                  num_workers=args.num_workers,
                                  shuffle=shuffle)
 
 
 class VQADataset(data.Dataset):
-    def __init__(self, annotations, questions, images_dataset, split, args):
+    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None):
         print("Loading {0} annotations".format(split))
         with open(annotations) as ann:
             j = json.load(ann)
@@ -45,6 +45,9 @@ class VQADataset(data.Dataset):
             self.data, self.vocab = process_vqa_dataset(self.questions, self.annotations, split, args)
             print("Caching the processed data")
             pickle.dump([self.data, self.vocab], open(cache_file, 'wb+'))
+
+        if vocab:
+            self.vocab = vocab
 
         self.embed_question = args.embed_question
 
