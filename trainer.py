@@ -13,7 +13,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
 
     for idx, sample in enumerate(dataloader):
         q = sample['question']
-        img = sample["visual"]
+        img = sample["image"]
         ans_label = sample['answer_id']
 
         q = Variable(q).cuda()
@@ -50,7 +50,7 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
 
     for i, sample in enumerate(dataloader):
         q = sample['question']
-        img = sample["visual"]
+        img = sample["image"]
         ans_label = sample['answer_id']
 
         q = Variable(q).cuda()

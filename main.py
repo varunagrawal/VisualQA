@@ -27,12 +27,15 @@ def parse_args():
     parser.add_argument("--max_length", default=25, help="The maximum length to consider to each question")
     parser.add_argument("--epochs", default=50, help="Number of training epochs")
     parser.add_argument("--start_epoch", default=0, help="Starting epoch")
-    parser.add_argument('--lr', "--learning_rate", default=4e-4, help="Learning rate")
-    parser.add_argument("--weight-decay", '--wd', default=0.0005, help="Optimizer weight decay")
+    parser.add_argument('--lr', "--learning_rate", default=3e-4, help="Learning rate")
+    parser.add_argument("--lr_decay", default=0.95, help="The learning rate decay")
+    parser.add_argument("--betas", default=(0.8, 0.999), nargs="+", type=float)
+    parser.add_argument("--weight-decay", '--wd', default=0.0, help="Optimizer weight decay")
     parser.add_argument("--print-freq", default=100, help="How frequently to print training stats")
-    parser.add_argument("--batch_size", default=256)
+    parser.add_argument("--batch_size", default=1, help="Batch Size")
     parser.add_argument('-j', "--num_workers", default=4)
     parser.add_argument("--save_dir", default="weights", help="Directory where model weights are stored")
+    parser.add_argument("--gpu", default=-0, help="The GPU to use for training. For multi-gpu setups.")
     parser.add_argument("--port", default=8097, help="The port for the Visdom server")
 
     args = parser.parse_args()
@@ -41,6 +44,10 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    # Set the GPU to use
+    torch.cuda.set_device(args.gpu)
+
     annotations = osp.expanduser(args.annotations)
     questions = osp.expanduser(args.questions)
 
@@ -59,8 +66,8 @@ def main():
         model.cuda()
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=args.lr_decay)
 
     vis = visualize.Visualizer(args.port)
 
@@ -72,7 +79,6 @@ def main():
 
         trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
         trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
-        break
 
     print("Training complete!")
 
