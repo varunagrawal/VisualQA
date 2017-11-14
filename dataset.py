@@ -21,7 +21,7 @@ def get_dataloader(annotations, questions, images, split, args, vocab=None, shuf
 
 
 class VQADataset(data.Dataset):
-    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None):
+    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None, normalize_img=True):
         print("Loading {0} annotations".format(split))
         with open(annotations) as ann:
             j = json.load(ann)
@@ -50,6 +50,7 @@ class VQADataset(data.Dataset):
             self.vocab = vocab
 
         self.embed_question = args.embed_question
+        self.normalize_img = normalize_img
 
     def __len__(self):
         return len(self.data)
@@ -57,12 +58,17 @@ class VQADataset(data.Dataset):
     def __getitem__(self, index):
         d = self.data[index]
 
-        item = {}
+        item = dict()
 
         # Process Visual (image or features)
         # the preprocess script should have already saved these as Torch tensors
         item["image_id"] = d["image_id"]
-        item['visual'] = self.images_dataset[d["image_id"]].squeeze()
+        img = self.images_dataset[d["image_id"]].squeeze()
+        if self.normalize_img:
+            norm = img.mul(img)
+            norm = norm.sum(dim=0, keepdim=True).sqrt()
+            img = img.div(norm)
+        item['image'] = img
 
         # Process Question (word token)
         item['question_id'] = d['question_id']
