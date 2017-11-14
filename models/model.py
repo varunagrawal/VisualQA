@@ -7,7 +7,7 @@ from torch.autograd import Variable
 class DeeperLSTM(nn.Module):
     def __init__(self, vocab_size, embed_dim=300,
                  image_dim=4096, image_embed_dim=1024,
-                 hidden_dim=2048, rnn_output_dim=1024,
+                 hidden_dim=512, rnn_output_dim=1024,
                  output_dim=1000):
         """
 
@@ -42,8 +42,7 @@ class DeeperLSTM(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Linear(rnn_output_dim, output_dim),
-            nn.Tanh())
+            nn.Linear(rnn_output_dim, output_dim))
 
     def _init_hidden(self, q):
         hidden = [Variable(torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim)),
@@ -65,6 +64,7 @@ class DeeperLSTM(nn.Module):
         lstm_out, hidden = self.rnn(q, hidden)
 
         hidden_state, cell = hidden
+
         # convert from TxBxD to BxTxD and make contiguous
         hidden_state =  hidden_state.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
