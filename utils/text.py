@@ -77,7 +77,7 @@ def encode_questions(dataset, word_to_wid, max_length=25):
 
 
 def get_top_answers(dataset, top=1000):
-    print("Finding top answers")
+    print("Finding top {0} answers".format(top))
     counts = {}
     for idx, d in enumerate(tqdm(dataset)):
         ans = d["answer"]
