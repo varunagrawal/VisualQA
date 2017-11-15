@@ -1,22 +1,17 @@
+"""
+Script to generate embedding of images from COCO imags using VGG16
+"""
+
 import argparse
 import json
 import torch
-from torchvision import models, transforms
+from torchvision import transforms
 from torch.utils import data
 from torch.autograd import Variable
 from tqdm import tqdm
 from PIL import Image
 import os.path as osp
-
-
-def get_model():
-    model = models.vgg16(pretrained=True)
-    model.features = torch.nn.DataParallel(model.features)
-    modules = list(model.classifier.children())
-    # restrict to the FC layer that gives us the 4096 embedding
-    modules = modules[:-3]
-    model.classifier = torch.nn.Sequential(*modules)
-    return model
+import utils.image
 
 
 class COCODataset(data.Dataset):
@@ -62,8 +57,10 @@ def main(file, root, split):
     coco = COCODataset(coco_dataset_file, root=root, transform=transform)
     data_loader = data.DataLoader(coco, batch_size=1, shuffle=False, num_workers=4)
 
-    model = get_model()
-    model.cuda()
+    model = utils.image.get_model()
+    if torch.cuda.is_available():
+        model.cuda()
+
     model.eval()
 
     embeddings = {}
