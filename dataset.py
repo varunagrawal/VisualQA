@@ -6,22 +6,25 @@ import torch.utils.data as data
 from utils import text
 import os
 import numpy as np
+from utils.image import coco_name_format
 
 
-def coco_name_format(image_id, split):
-    image_name = "COCO_{0}2014_{1:012}.jpg".format(split, image_id)
-    return image_name
+def get_train_dataloader(annotations, questions, images, args, vocab=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, "train", args, vocab=vocab),
+                                 batch_size=args.batch_size,
+                                 num_workers=args.num_workers,
+                                 shuffle=shuffle)
 
-
-def get_dataloader(annotations, questions, images, split, args, vocab=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, split, args, vocab=vocab),
+def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, "val", args, vocab=vocab, maps=maps),
                                  batch_size=args.batch_size,
                                  num_workers=args.num_workers,
                                  shuffle=shuffle)
 
 
 class VQADataset(data.Dataset):
-    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None, normalize_img=True):
+    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None, normalize_img=True, maps=None):
+
         print("Loading {0} annotations".format(split))
         with open(annotations) as ann:
             j = json.load(ann)
@@ -37,20 +40,35 @@ class VQADataset(data.Dataset):
         self.images_dataset = torch.load(images_dataset)
         self.split = split
 
-        cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
-        if os.path.exists(cache_file):
-            print("Found dataset cache! Loading...")
-            self.data, self.vocab = pickle.load(open(cache_file, 'rb'))
-        else:
-            self.data, self.vocab = process_vqa_dataset(self.questions, self.annotations, split, args)
-            print("Caching the processed data")
-            pickle.dump([self.data, self.vocab], open(cache_file, 'wb+'))
+        self._process_dataset(args, split, maps=maps)
 
         if vocab:
             self.vocab = vocab
 
         self.embed_question = args.embed_question
         self.normalize_img = normalize_img
+
+    def _process_dataset(self, args, split="train", maps=None):
+        """
+        Process the dataset.
+        We should only do this for the training set
+        """
+        cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
+
+        if os.path.exists(cache_file):
+            print("Found dataset cache! Loading...")
+            self.data, self.vocab, \
+            self.word_to_wid, self.wid_to_word, \
+            self.ans_to_aid, self.aid_to_ans = pickle.load(open(cache_file, 'rb'))
+
+        else:
+            self.data, self.vocab, \
+            self.word_to_wid, self.wid_to_word, \
+            self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(self.questions, self.annotations, split, args, maps)
+
+            print("Caching the processed data")
+            pickle.dump([self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans],
+                        open(cache_file, 'wb+'))
 
     def __len__(self):
         return len(self.data)
@@ -85,13 +103,15 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions, annotations, split, args):
+def process_vqa_dataset(questions, annotations, split, args, maps=None):
     """
-    Process the questions and annotations into a consolidated dataset
+    Process the questions and annotations into a consolidated dataset.
+    This is done only for the training set.
     :param questions:
     :param annotations:
     :param split:
     :param args:
+    :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans
     :return: The processed dataset ready to be used
 
     """
@@ -101,7 +121,7 @@ def process_vqa_dataset(questions, annotations, split, args):
         d["question_id"] = q["question_id"]
         d["question"] = q["question"]
         d["image_id"] = q["image_id"]
-        d["image_name"] = coco_name_format(q["image_id"], split)
+        d["image_name"] = coco_name_format(q["image_id"], "train")
 
         d["answer"] = annotations[idx]["multiple_choice_answer"]
         answers = []
@@ -120,14 +140,20 @@ def process_vqa_dataset(questions, annotations, split, args):
     vocab = text.get_vocabulary(dataset)
     dataset = text.remove_tail_words(dataset, vocab)
 
-    word_to_wid = {w:i for i, w in enumerate(vocab)}
-    wid_to_word = [w for w in vocab]
+    if split == "train":
+        word_to_wid = {w:i for i, w in enumerate(vocab)}
+        wid_to_word = [w for w in vocab]
+
+        ans_to_aid = {a: i for i, a in enumerate(top_answers)}
+        aid_to_ans = [a for a in top_answers]
+
+    else: # split == "val":
+        word_to_wid = maps["word_to_wid"]
+        wid_to_word = maps["wid_to_word"]
+        ans_to_aid = maps["ans_to_aid"]
+        aid_to_ans = maps["aid_to_ans"]
 
     dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
-
-    ans_to_aid = {a: i for i, a in enumerate(top_answers)}
-    aid_to_ans = [a for a in top_answers]
-
     dataset = text.encode_answers(dataset, ans_to_aid)
 
-    return dataset, vocab
+    return dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans

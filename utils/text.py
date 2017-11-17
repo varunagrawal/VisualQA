@@ -70,7 +70,8 @@ def encode_questions(dataset, word_to_wid, max_length=25):
 
         for k, w in enumerate(d["question_words_UNK"]):
             if k < max_length:
-                d["question_wids"][k] = int(word_to_wid[w])  # ensure it is an int so it can be used for indexing
+                wid = word_to_wid.get(w, word_to_wid["UNK"])
+                d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing
                 d['seq_length'] = len(d['question_words_UNK'])
 
     return dataset
@@ -82,6 +83,8 @@ def get_top_answers(dataset, top=1000):
     for idx, d in enumerate(tqdm(dataset)):
         ans = d["answer"]
         counts[ans] = counts.get(ans, 0) + 1
+
+    print("{0} unqiue answers".format(len(counts)))
 
     # Get a list of answers sorted by how common they are
     ans_counts = sorted([(count, ans) for ans, count in counts.items()], reverse=True)
