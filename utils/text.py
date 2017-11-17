@@ -41,7 +41,7 @@ def get_vocabulary(dataset, min_word_count=1):
             counts[w] = counts.get(w, 0) + 1
 
     vocab = [w for w, n in counts.items() if n >= min_word_count]
-    vocab.append('UNK')
+    vocab.insert(0, 'UNK')
     return vocab
 
 
@@ -66,13 +66,13 @@ def encode_questions(dataset, word_to_wid, max_length=25):
     print("Encoding the questions")
     for idx, d in enumerate(tqdm(dataset)):
         d["question_length"] = min(len(d["question_words_UNK"]), max_length)
-        d["question_wids"] = np.zeros(max_length, dtype=np.int32)
+        d["question_wids"] = np.zeros(max_length, dtype=np.int32)  # 0 -> UNK
 
         for k, w in enumerate(d["question_words_UNK"]):
             if k < max_length:
                 wid = word_to_wid.get(w, word_to_wid["UNK"])
                 d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing
-                d['seq_length'] = len(d['question_words_UNK'])
+                d['seq_length'] = len(d['question_words_UNK'])  # length of the original sequence
 
     return dataset
 
@@ -116,3 +116,10 @@ def filter_dataset(dataset, top_answers):
     print("Filtered Dataset Size: ", len(filtered_dataset))
     return filtered_dataset
 
+
+def process_single_question(question, vocab, word_to_wid, max_length=25):
+    d = [{ "question": question }]
+    d = preprocess_questions(d)
+    d = remove_tail_words(d, vocab)
+    encoded_question = encode_questions(d, word_to_wid, max_length)
+    return encoded_question[0]
