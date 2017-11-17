@@ -66,11 +66,11 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
 
         avg_loss.update(loss.data[0], q.size(0))
 
-        if vis and idx % args.visualize_freq == 0:
+        if vis and i % args.visualize_freq == 0:
             vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
 
         if i > 0 and i % args.print_freq == 0:
-            print_state(i, -1, len(dataloader), avg_loss.avg, avg_acc)
+            print_state(i, -1, len(dataloader), avg_loss.avg, avg_acc.avg)
 
 
 def save_checkpoint(model, args, epoch):
