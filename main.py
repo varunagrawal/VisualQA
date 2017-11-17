@@ -23,7 +23,7 @@ def parse_args():
                         help="The file containing torch tensors of the FC7 embeddings of val COCO images")
     parser.add_argument("--embed_question", action="store_true",
                         help="Return the question as a list of word IDs so we can use an embedding layer on it")
-    parser.add_argument("--top_answer_limit", default=3000, help="The number of answers to consider as viable options")
+    parser.add_argument("--top_answer_limit", default=1000, help="The number of answers to consider as viable options")
     parser.add_argument("--max_length", default=25, help="The maximum length to consider to each question")
     parser.add_argument("--arch", default="DeeperLSTM", help="The model to use for VQA",
                         choices=tuple([name for name, _ in Models.__members__.items()]))
@@ -72,7 +72,7 @@ def main():
                                             maps=maps, vocab=vocab, shuffle=False)
 
     arch = Models[args.arch].value
-    model = arch(len(vocab))
+    model = arch(len(vocab), output_dim=args.top_answer_limit)
 
     if torch.cuda.is_available():
         model.cuda()
@@ -92,6 +92,7 @@ def main():
         trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
         trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
 
+        break
     print("Training complete!")
 
 

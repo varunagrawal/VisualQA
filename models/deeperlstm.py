@@ -14,7 +14,7 @@ class DeeperLSTM(nn.Module):
                  hidden_dim=512, rnn_output_dim=1024,
                  output_dim=1000):
         """
-
+        # TODO
         :param vocab_size:
         :param embed_dim:
         :param image_dim:

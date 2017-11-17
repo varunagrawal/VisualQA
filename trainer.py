@@ -78,7 +78,7 @@ def save_checkpoint(model, args, epoch):
         os.makedirs(args.save_dir)
 
     state = {
-        "model": model,
+        "model": model.state_dict(),
         "args": args
     }
     filename = 'vqa_checkpoint_{0}.pth.tar'.format(epoch)
