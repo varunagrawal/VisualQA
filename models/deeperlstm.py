@@ -1,3 +1,7 @@
+"""
+A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
+"""
+
 import torch
 from torch import nn
 from torch.autograd import Variable
