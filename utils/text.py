@@ -90,7 +90,7 @@ def get_top_answers(dataset, top=1000):
     ans_counts = sorted([(count, ans) for ans, count in counts.items()], reverse=True)
     top_answers = []
 
-    for i in range(top):
+    for i in range(top-1):  # the last answer is reserved for out_of_scope
         top_answers.append(ans_counts[i][1])
 
     return top_answers
@@ -98,10 +98,10 @@ def get_top_answers(dataset, top=1000):
 
 def encode_answers(dataset, ans_to_aid):
     print("Encoding answers")
-    out_of_vocab = len(ans_to_aid)
+    out_of_scope = len(ans_to_aid) - 1  # the last label is reserved for the rest of the answers
 
     for idx, d in enumerate(tqdm(dataset)):
-        d["answer_id"] = ans_to_aid.get(d['answer'], out_of_vocab)
+        d["answer_id"] = ans_to_aid.get(d['answer'], out_of_scope)
 
     return dataset
 

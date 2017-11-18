@@ -92,7 +92,6 @@ def main():
         trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
         trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
 
-        break
     print("Training complete!")
 
 
