@@ -20,8 +20,8 @@ def tokenize(s):
     return q_list
 
 
-def preprocess_questions(dataset):
-    for idx, d in enumerate(tqdm(dataset)):
+def preprocess_questions(dataset, display=True):
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         s = d["question"]
         d["question_words"] = tokenize(s)
     return dataset
@@ -45,9 +45,11 @@ def get_vocabulary(dataset, min_word_count=1):
     return vocab
 
 
-def remove_tail_words(dataset, vocab):
-    print("Removing tail words")
-    for idx, d in enumerate(tqdm(dataset)):
+def remove_tail_words(dataset, vocab, display=True):
+    if display:
+        print("Removing tail words")
+
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         words = d["question_words"]
         question = [w if w in vocab else 'UNK' for w in words]
         d["question_words_UNK"] = question
@@ -55,16 +57,19 @@ def remove_tail_words(dataset, vocab):
     return dataset
 
 
-def encode_questions(dataset, word_to_wid, max_length=25):
+def encode_questions(dataset, word_to_wid, max_length=25, display=True):
     """
     Encode each question into a vector of size Max_Length x Vocab_Size
     :param dataset:
     :param word_to_wid:
     :param max_length
+    :param display
     :return:
     """
-    print("Encoding the questions")
-    for idx, d in enumerate(tqdm(dataset)):
+    if display:
+        print("Encoding the questions")
+
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         d["question_length"] = min(len(d["question_words_UNK"]), max_length)
         d["question_wids"] = np.zeros(max_length, dtype=np.int32)  # 0 -> UNK
 
@@ -77,10 +82,10 @@ def encode_questions(dataset, word_to_wid, max_length=25):
     return dataset
 
 
-def get_top_answers(dataset, top=1000):
+def get_top_answers(dataset, top=1000, display=True):
     print("Finding top {0} answers".format(top))
     counts = {}
-    for idx, d in enumerate(tqdm(dataset)):
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         ans = d["answer"]
         counts[ans] = counts.get(ans, 0) + 1
 
@@ -96,19 +101,19 @@ def get_top_answers(dataset, top=1000):
     return top_answers
 
 
-def encode_answers(dataset, ans_to_aid):
+def encode_answers(dataset, ans_to_aid, display=True):
     print("Encoding answers")
     out_of_scope = len(ans_to_aid) - 1  # the last label is reserved for the rest of the answers
 
-    for idx, d in enumerate(tqdm(dataset)):
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         d["answer_id"] = ans_to_aid.get(d['answer'], out_of_scope)
 
     return dataset
 
 
-def filter_dataset(dataset, top_answers):
+def filter_dataset(dataset, top_answers, display=True):
     filtered_dataset = []
-    for idx, d in enumerate(tqdm(dataset)):
+    for idx, d in enumerate(tqdm(dataset, leave=display)):
         if d["answer"] in top_answers:
             filtered_dataset.append(d)
 
@@ -119,7 +124,7 @@ def filter_dataset(dataset, top_answers):
 
 def process_single_question(question, vocab, word_to_wid, max_length=25):
     d = [{ "question": question }]
-    d = preprocess_questions(d)
-    d = remove_tail_words(d, vocab)
-    encoded_question = encode_questions(d, word_to_wid, max_length)
+    d = preprocess_questions(d, display=False)
+    d = remove_tail_words(d, vocab, display=False)
+    encoded_question = encode_questions(d, word_to_wid, max_length, display=False)
     return encoded_question[0]
