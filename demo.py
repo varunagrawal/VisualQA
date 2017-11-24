@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("image", help="Path to image file")
     parser.add_argument("question", help="Question text")
     parser.add_argument("--model", default="DeeperLSTM")
-    parser.add_argument("--weights")
+    parser.add_argument("--weights", default="weights/best_weights.pth.tar")
     parser.add_argument("--preprocessed_cache", default="vqa_train_dataset_cache.pickle")
 
     return parser.parse_args()
@@ -53,7 +53,12 @@ def main():
     # The final classifier
     classifier = nn.Softmax()
 
-    weights = torch.load(args.weights)
+    try:
+        weights = torch.load(args.weights)
+    except (Exception,):
+        print("ERROR: Default weights missing. Please specify weights for the VQA model")
+        exit(0)
+
     model.load_state_dict(weights["model"])
 
     if torch.cuda.is_available():
