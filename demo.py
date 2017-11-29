@@ -78,7 +78,7 @@ def main():
     print("Processing image")
     im = Image.open(args.image)
     img = img_transforms(im)
-    img = img.unsqueeze(0)
+    img = img.unsqueeze(0)  # add batch dimension
     img_var = Variable(img)
 
     if torch.cuda.is_available():
@@ -89,6 +89,7 @@ def main():
     print("Processing question")
     q = text.process_single_question(args.question, vocab, word_to_wid)
 
+    # Convert the question to a sequence of 1 hot vectors over the vocab
     one_hot_vec = np.zeros((len(q["question_wids"]), len(vocab)))
     for k in range(len(q["question_wids"])):
         one_hot_vec[k, q['question_wids'][k]] = 1
@@ -97,12 +98,14 @@ def main():
     if torch.cuda.is_available():
         q_var = q_var.cuda()
 
-    q_var = q_var.unsqueeze(0)
+    # Add the batch dimension
+    q_var = q_var.unsqueeze(0).float()
 
-    output = model(img_features, q_var.float())
-    output = classifier(output)
+    # Get the model output and classify for the final value
+    output = model(img_features, q_var)
+    output = classifier(output).data
 
-    _, ans_id = torch.max(output.data, dim=1)
+    _, ans_id = torch.max(output, dim=1)
     # index into ans_id since it is a tensor
     ans = generate(ans_id[0], aid_to_ans)
 
