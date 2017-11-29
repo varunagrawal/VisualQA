@@ -25,36 +25,13 @@ def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, s
 class VQADataset(data.Dataset):
     def __init__(self, annotations, questions, images_dataset, split, args, vocab=None, normalize_img=True, maps=None):
 
-        print("Loading {0} annotations".format(split))
-        with open(annotations) as ann:
-            j = json.load(ann)
-            self.annotations = j["annotations"]
-
-        print("Loading {0} questions".format(split))
-        with open(questions) as q:
-            j = json.load(q)
-            self.questions = j["questions"]
-
-        # the images_dataset is the joblib file
         # the data is saved as a dict where the key is the image_id and the value is the VGG feature vector
         self.images_dataset = torch.load(images_dataset)
         self.split = split
 
-        self._process_dataset(args, split, maps=maps)
-
-        if vocab:
-            self.vocab = vocab
-
-        self.embed_question = args.embed_question
-        self.normalize_img = normalize_img
-
-    def _process_dataset(self, args, split="train", maps=None):
-        """
-        Process the dataset.
-        We should only do this for the training set
-        """
         cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
 
+        # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
         if os.path.exists(cache_file):
             print("Found dataset cache! Loading...")
             self.data, self.vocab, \
@@ -62,13 +39,36 @@ class VQADataset(data.Dataset):
             self.ans_to_aid, self.aid_to_ans = pickle.load(open(cache_file, 'rb'))
 
         else:
-            self.data, self.vocab, \
-            self.word_to_wid, self.wid_to_word, \
-            self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(self.questions, self.annotations, split, args, maps)
+            print("Loading {0} annotations".format(split))
+            with open(annotations) as ann:
+                j = json.load(ann)
+                self.annotations = j["annotations"]
 
-            print("Caching the processed data")
-            pickle.dump([self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans],
-                        open(cache_file, 'wb+'))
+            print("Loading {0} questions".format(split))
+            with open(questions) as q:
+                j = json.load(q)
+                self.questions = j["questions"]
+
+            self._process_dataset(args, cache_file, split, maps=maps)
+
+        if vocab:
+            self.vocab = vocab
+
+        self.embed_question = args.embed_question
+        self.normalize_img = normalize_img
+
+    def _process_dataset(self, args,  cache_file, split="train", maps=None):
+        """
+        Process the dataset.
+        We should only do this for the training set
+        """
+        self.data, self.vocab, \
+        self.word_to_wid, self.wid_to_word, \
+        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(self.questions, self.annotations, split, args, maps)
+
+        print("Caching the processed data")
+        pickle.dump([self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans],
+                    open(cache_file, 'wb+'))
 
     def __len__(self):
         return len(self.data)
