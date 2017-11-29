@@ -14,14 +14,14 @@ class DeeperLSTM(nn.Module):
                  hidden_dim=512, rnn_output_dim=1024,
                  output_dim=1000):
         """
-        # TODO
-        :param vocab_size:
-        :param embed_dim:
-        :param image_dim:
-        :param image_embed_dim:
-        :param hidden_dim:
-        :param rnn_output_dim:
-        :param output_dim:
+
+        :param vocab_size: The number of words in the vocabulary
+        :param embed_dim: The question embedding dimensionality
+        :param image_dim: The image feature dimensionality
+        :param image_embed_dim: The image embedding dimensionality
+        :param hidden_dim: The dimensionality of the RNN's hidden state
+        :param rnn_output_dim: The RNN output dimensionality
+        :param output_dim: The number of answers to output over.
         """
         super().__init__()
 
@@ -49,6 +49,11 @@ class DeeperLSTM(nn.Module):
             nn.Linear(rnn_output_dim, output_dim))
 
     def _init_hidden(self, q):
+        """
+        Initialize the hidden state of the RNN
+        :param q: The question embedding. Used for getting the hidden state dimensions.
+        :return: The initial hidden state for the RNN
+        """
         hidden = [Variable(torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim)),
                   Variable(torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim))]
         if torch.cuda.is_available():

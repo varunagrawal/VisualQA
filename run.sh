@@ -1,4 +1,4 @@
-# I recommend using pipenv
+# Using `pipenv` is highly recommended
 # pipenv shell
 
 ROOT=~/datasets/VQA2
