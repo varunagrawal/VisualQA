@@ -142,10 +142,10 @@ def process_vqa_dataset(questions, annotations, split, args, maps=None):
 
     if split == "train":
         word_to_wid = {w:i for i, w in enumerate(vocab)}
-        wid_to_word = [w for w in vocab]
+        wid_to_word = {i:w for i, w in enumerate(vocab)}
 
         ans_to_aid = {a: i for i, a in enumerate(top_answers)}
-        aid_to_ans = [a for a in top_answers]
+        aid_to_ans = {i: a for i, a in enumerate(top_answers)}
 
     else: # split == "val":
         word_to_wid = maps["word_to_wid"]
