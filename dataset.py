@@ -117,7 +117,7 @@ def process_vqa_dataset(questions, annotations, split, args, maps=None):
     """
     dataset = []
     for idx, q in enumerate(questions):
-        d = {}
+        d = dict()
         d["question_id"] = q["question_id"]
         d["question"] = q["question"]
         d["image_id"] = q["image_id"]
@@ -138,7 +138,6 @@ def process_vqa_dataset(questions, annotations, split, args, maps=None):
     # Process the questions
     dataset = text.preprocess_questions(dataset)
     vocab = text.get_vocabulary(dataset)
-    dataset = text.remove_tail_words(dataset, vocab)
 
     if split == "train":
         word_to_wid = {w:i for i, w in enumerate(vocab)}
@@ -153,6 +152,7 @@ def process_vqa_dataset(questions, annotations, split, args, maps=None):
         ans_to_aid = maps["ans_to_aid"]
         aid_to_ans = maps["aid_to_ans"]
 
+    dataset = text.remove_tail_words(dataset, vocab)
     dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
     dataset = text.encode_answers(dataset, ans_to_aid)
 

@@ -27,7 +27,7 @@ def preprocess_questions(dataset, display=True):
     return dataset
 
 
-def get_vocabulary(dataset, min_word_count=1):
+def get_vocabulary(dataset, min_word_count=2):
     """
     Filter out words in the questions that are < min_word_count and create a vocabulary from the filtered words
     :param dataset: The VQA dataset
@@ -41,7 +41,9 @@ def get_vocabulary(dataset, min_word_count=1):
             counts[w] = counts.get(w, 0) + 1
 
     vocab = [w for w, n in counts.items() if n >= min_word_count]
-    vocab.insert(0, 'UNK')
+    # 0 is used for padding
+    vocab.insert(0, '^$')  # special chars to indicate padding
+    vocab.append('UNK')  # UNK has it's own ID
     return vocab
 
 
