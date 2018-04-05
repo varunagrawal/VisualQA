@@ -81,7 +81,10 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=args.decay_interval, gamma=args.lr_decay)
 
-    vis = visualize.Visualizer(args.port)
+    try:
+        vis = visualize.Visualizer(args.port)
+    except (Exception,):
+        vis = None
 
     print("Beginning training")
     print("#"*80)

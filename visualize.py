@@ -29,6 +29,10 @@ class Visualizer:
         :param win:
         :return:
         """
-        self.send(torch.ones((1,)) * (epoch * data_size + iteration),
-                  loss.data.cpu(),
-                  win, update=True)
+        try:
+            self.send(torch.ones((1,)) * (epoch * data_size + iteration),
+                      loss.data.cpu(),
+                      win, update=True)
+        except (Exception,):
+            # quietly settle down
+            pass
