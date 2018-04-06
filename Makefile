@@ -15,5 +15,11 @@ ARCH=DeeperLSTM
 BATCH=16
 
 main:
-    python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(TRAIN_IMGS) $(VAL_ANN) $(VAL_QUES) $(VAL_IMGS)
+    python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(TRAIN_IMGS) $(VAL_ANN) $(VAL_QUES) $(VAL_IMGS) \
     --arch $(ARCH) --batch-size ${BATCH}
+
+options:
+    python main.py -h
+
+demo:
+    python demo.py demo_img.jpg "what room is this?"

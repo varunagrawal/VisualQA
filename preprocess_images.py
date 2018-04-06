@@ -57,7 +57,7 @@ def main(file, root, split, arch):
     coco = COCODataset(coco_dataset_file, root=root, transform=transform)
     data_loader = data.DataLoader(coco, batch_size=1, shuffle=False, num_workers=4)
 
-    model = utils.image.get_model(arch)
+    model, layer = utils.image.get_model(arch)
     if torch.cuda.is_available():
         model.cuda()
 
@@ -79,7 +79,7 @@ def main(file, root, split, arch):
 
     print("Done computing image embeddings")
 
-    torch.save(embeddings, "coco_{0}_{1}_fc7.pth".format(split, arch))
+    torch.save(embeddings, "coco_{0}_{1}_{2}.pth".format(split, arch, layer))
 
 
 parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")

@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("--model", default="DeeperLSTM")
     parser.add_argument("--weights", default="weights/best_weights.pth.tar")
     parser.add_argument("--preprocessed_cache", default="vqa_train_dataset_cache.pickle")
+    parser.add_argument("--embedding_arch", default="vgg")
 
     return parser.parse_args()
 
@@ -47,7 +48,7 @@ def main():
     data, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans = pickle.load(open(args.preprocessed_cache, 'rb'))
 
     # Get VGG model to process the image
-    vision_model = image.get_model()
+    vision_model = image.get_model(args.embedding_arch)
     # Get our VQA model
     model = Models[args.model].value(len(vocab))
     # The final classifier

@@ -1,1 +1,0 @@
-python demo.py demo_img.jpg "what room is this?"

@@ -10,12 +10,15 @@ def get_model(arch):
         # restrict to the FC layer that gives us the 4096 embedding
         modules = modules[:-3]
         model.classifier = torch.nn.Sequential(*modules)
+        layer = "fc7"
+
     elif arch == 'resnet152':
         model = models.resnet152(pretrained=True)
         modules = list(model.children())[:-1]
         model = torch.nn.Sequential(*modules)
+        layer = "pool5"
 
-    return model
+    return model, layer
 
 
 def coco_name_format(image_id, split):
