@@ -16,7 +16,7 @@ BATCH=16
 
 main:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(TRAIN_IMGS) $(VAL_ANN) $(VAL_QUES) $(VAL_IMGS) \
-    --arch $(ARCH) --batch-size ${BATCH}
+    --arch $(ARCH) --batch_size ${BATCH}
 
 options:
     python main.py -h
