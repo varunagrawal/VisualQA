@@ -77,7 +77,7 @@ def main(file, root, split, arch):
         embedding = model(img_var)
         embeddings[id[0, 0]] = embedding.data.cpu()
 
-    print("Done computing embeddings")
+    print("Done computing image embeddings")
 
     torch.save(embeddings, "coco_{0}_{1}_fc7.pth".format(split, arch))
 
