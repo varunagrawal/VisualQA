@@ -39,7 +39,7 @@ class COCODataset(data.Dataset):
         return img, id
 
 
-def main(file, root, split):
+def main(file, root, split, arch):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -57,11 +57,17 @@ def main(file, root, split):
     coco = COCODataset(coco_dataset_file, root=root, transform=transform)
     data_loader = data.DataLoader(coco, batch_size=1, shuffle=False, num_workers=4)
 
-    model = utils.image.get_model()
+    model = utils.image.get_model(arch)
     if torch.cuda.is_available():
         model.cuda()
 
-    model.eval()
+    if split == 'train':
+        model.train()
+    elif split == 'val':
+        model.eval()
+    else:
+        print("Unknown split. Exiting...")
+        exit(0)
 
     embeddings = {}
 
@@ -73,12 +79,13 @@ def main(file, root, split):
 
     print("Done computing embeddings")
 
-    torch.save(embeddings, "coco_{0}_vgg_fc7.pth".format(split))
+    torch.save(embeddings, "coco_{0}_{1}_fc7.pth".format(split, arch))
 
 
 parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
 
 parser.add_argument("file", help="Path to COCO annotations file")
+parser.add_argument("--arch", default="vgg", choices=("vgg", "resnet152"))
 parser.add_argument("--root", help="Path to the train/val root directory of images")
 parser.add_argument("--split", default="train", choices=("train", "val"))
 
@@ -86,4 +93,4 @@ args = parser.parse_args()
 
 # "/home/varun/datasets/MSCOCO/annotations/instances_{0}2014.json".format(split)
 # "/home/varun/datasets/MSCOCO/{0}2014".format(split)
-main(args.file, args.root, args.split)
+main(args.file, args.root, args.split, arch=args.arch)

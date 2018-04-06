@@ -2,13 +2,19 @@ import torch
 from torchvision import models
 
 
-def get_model():
-    model = models.vgg16(pretrained=True)
-    model.features = torch.nn.DataParallel(model.features)
-    modules = list(model.classifier.children())
-    # restrict to the FC layer that gives us the 4096 embedding
-    modules = modules[:-3]
-    model.classifier = torch.nn.Sequential(*modules)
+def get_model(arch):
+    if arch == 'vgg':
+        model = models.vgg16(pretrained=True)
+        model.features = torch.nn.DataParallel(model.features)
+        modules = list(model.classifier.children())
+        # restrict to the FC layer that gives us the 4096 embedding
+        modules = modules[:-3]
+        model.classifier = torch.nn.Sequential(*modules)
+    elif arch == 'resnet152':
+        model = models.resnet152(pretrained=True)
+        modules = list(model.children())[:-1]
+        model = torch.nn.Sequential(*modules)
+
     return model
 
 
