@@ -18,8 +18,8 @@ python preprocess_images.py <path to instances_train2014.json> \
     --root <path to dataset root "train2014|val2014"> \
     --split <train|val> --arch <vgg|resnet152>
 ```
-I have already pre-processed
-all the COCO images using VGG-16. You can find them [here]().
+I have already pre-processed all the COCO images (both train and test sets) using the VGG-16 and ResNet-152 models. </br>
+You can find them [here](https://1drv.ms/f/s!Au18pri6pxSNlop81AhX4bATqy1VJA).
 
 
 ## Running
