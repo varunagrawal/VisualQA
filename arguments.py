@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--betas", default=(0.8, 0.999), nargs="+", type=float)
     parser.add_argument("--weight-decay", '--wd', default=0.0, help="Optimizer weight decay")
     parser.add_argument("--print-freq", default=100, help="How frequently to print training stats")
-    parser.add_argument("--batch_size", default=16, help="Batch Size")
+    parser.add_argument("--batch_size", default=16, help="Batch Size", type=int)
     parser.add_argument('-j', "--num_workers", default=4)
     parser.add_argument("--save_dir", default="weights", help="Directory where model weights are stored")
     parser.add_argument("--gpu", default=-0, help="The GPU to use for training. For multi-gpu setups.")
