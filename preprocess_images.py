@@ -44,8 +44,8 @@ def main(file, root, split, arch):
                                      std=[0.229, 0.224, 0.225])
 
     transform = transforms.Compose([
-            transforms.Scale(256),
-            transforms.RandomSizedCrop(224),
+            transforms.Resize(256),
+            transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize,
