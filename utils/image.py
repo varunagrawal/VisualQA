@@ -3,7 +3,7 @@ from torchvision import models
 
 
 def get_model(arch):
-    if arch == 'vgg':
+    if arch == 'vgg16':
         model = models.vgg16(pretrained=True)
         model.features = torch.nn.DataParallel(model.features)
         modules = list(model.classifier.children())
@@ -21,6 +21,6 @@ def get_model(arch):
     return model, layer
 
 
-def coco_name_format(image_id, split):
-    image_name = "COCO_{0}2014_{1:012}.jpg".format(split, image_id)
+def coco_name_format(image_id, split, year):
+    image_name = "COCO_{0}{2}_{1:012}.jpg".format(split, image_id, year)
     return image_name
