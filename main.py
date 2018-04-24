@@ -7,6 +7,7 @@ import torch
 from torch import optim
 from torch.optim import lr_scheduler
 from torch import nn
+from torchvision import transforms
 from arguments import parse_args
 
 
@@ -16,10 +17,18 @@ def main():
     # Set the GPU to use
     torch.cuda.set_device(args.gpu)
 
-    annotations = osp.expanduser(args.annotations)
-    questions = osp.expanduser(args.questions)
-
-    vqa_loader = dataset.get_train_dataloader(annotations, questions, args.images, args)
+    transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+    vqa_loader = dataset.get_train_dataloader(osp.expanduser(args.annotations),
+                                              osp.expanduser(args.questions),
+                                              args.images, args, raw_images=args.raw_images,
+                                              transforms=transform)
     # We always use the vocab from the training set
     vocab = vqa_loader.dataset.vocab
 
@@ -29,13 +38,19 @@ def main():
         "ans_to_aid": vqa_loader.dataset.ans_to_aid,
         "aid_to_ans": vqa_loader.dataset.aid_to_ans,
     }
+    val_transform = transforms.Compose([
+        transforms.Resize(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
     val_loader = dataset.get_val_dataloader(osp.expanduser(args.val_annotations),
                                             osp.expanduser(args.val_questions),
-                                            args.val_images, args,
-                                            maps=maps, vocab=vocab, shuffle=False)
+                                            args.val_images, args, raw_images=args.raw_images,
+                                            maps=maps, vocab=vocab, shuffle=False, transforms=val_transform)
 
     arch = Models[args.arch].value
-    model = arch(len(vocab), output_dim=args.top_answer_limit)
+    model = arch(len(vocab), output_dim=args.top_answer_limit, raw_images=args.raw_images)
 
     if torch.cuda.is_available():
         model.cuda()
