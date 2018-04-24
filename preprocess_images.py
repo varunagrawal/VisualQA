@@ -85,7 +85,7 @@ def main(file, root, split, arch):
 parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
 
 parser.add_argument("file", help="Path to COCO annotations file")
-parser.add_argument("--arch", default="vgg", choices=("vgg", "resnet152"))
+parser.add_argument("--arch", default="vgg16", choices=("vgg16", "resnet152"))
 parser.add_argument("--root", help="Path to the train/val root directory of images")
 parser.add_argument("--split", default="train", choices=("train", "val"))
 
