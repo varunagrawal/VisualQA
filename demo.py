@@ -7,13 +7,15 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 from torchvision import transforms
-import pickle
+from dataset import process_vqa_dataset
 
 
 def parse_args():
     parser = argparse.ArgumentParser("VQA Demo")
     parser.add_argument("image", help="Path to image file")
     parser.add_argument("question", help="Question text")
+    parser.add_argument("questions", help="Path to VQA Questions training file")
+    parser.add_argument("annotations", help="Path to COCO Annotations training file")
     parser.add_argument("--model", default="DeeperLSTM")
     parser.add_argument("--weights", default="weights/deeper_lstm_best_weights.pth.tar")
     parser.add_argument("--preprocessed_cache", default="vqa_train_dataset_cache.pickle")
@@ -45,14 +47,15 @@ def main():
     args = parse_args()
 
     print("Loading encoded data...")
-    data, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans = pickle.load(open(args.preprocessed_cache, 'rb'))
+    data, vocab, word_to_wid, wid_to_word, \
+    ans_to_aid, aid_to_ans = process_vqa_dataset(args.questions, args.annotations, "train", maps=None)
 
     # Get VGG model to process the image
     vision_model, _ = image.get_model(args.embedding_arch)
     # Get our VQA model
     model = Models[args.model].value(len(vocab))
     # The final classifier
-    classifier = nn.Softmax()
+    classifier = nn.Softmax(dim=1)
 
     try:
         weights = torch.load(args.weights)
@@ -70,7 +73,7 @@ def main():
     model.eval()
 
     img_transforms = transforms.Compose([
-        transforms.Scale((224, 224)),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])

@@ -22,4 +22,4 @@ options:
     python main.py -h
 
 demo:
-    python demo.py demo_img.jpg "what room is this?"
+    python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN)
