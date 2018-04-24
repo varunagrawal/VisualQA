@@ -29,27 +29,7 @@ class VQADataset(data.Dataset):
         self.images_dataset = torch.load(images_dataset)
         self.split = split
 
-        cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
-
-        # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
-        if os.path.exists(cache_file):
-            print("Found dataset cache! Loading...")
-            self.data, self.vocab, \
-            self.word_to_wid, self.wid_to_word, \
-            self.ans_to_aid, self.aid_to_ans = pickle.load(open(cache_file, 'rb'))
-
-        else:
-            print("Loading {0} annotations".format(split))
-            with open(annotations) as ann:
-                j = json.load(ann)
-                self.annotations = j["annotations"]
-
-            print("Loading {0} questions".format(split))
-            with open(questions) as q:
-                j = json.load(q)
-                self.questions = j["questions"]
-
-            self._process_dataset(args, cache_file, split, maps=maps)
+        self._process_dataset(annotations, questions, args, split, maps=maps)
 
         if vocab:
             self.vocab = vocab
@@ -57,18 +37,14 @@ class VQADataset(data.Dataset):
         self.embed_question = args.embed_question
         self.normalize_img = normalize_img
 
-    def _process_dataset(self, args,  cache_file, split="train", maps=None):
+    def _process_dataset(self, annotations, questions, args,  split="train", maps=None):
         """
-        Process the dataset.
-        We should only do this for the training set
+        Process the dataset and load it up.
+        We should only do this for the training set.
         """
         self.data, self.vocab, \
         self.word_to_wid, self.wid_to_word, \
-        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(self.questions, self.annotations, split, args, maps)
-
-        print("Caching the processed data")
-        pickle.dump([self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans],
-                    open(cache_file, 'wb+'))
+        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, args, maps)
 
     def __len__(self):
         return len(self.data)
@@ -103,57 +79,82 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions, annotations, split, args, maps=None):
+def process_vqa_dataset(questions_file, annotations_file, split, args, maps=None):
     """
     Process the questions and annotations into a consolidated dataset.
     This is done only for the training set.
-    :param questions:
-    :param annotations:
-    :param split:
+    :param questions_file:
+    :param annotations_file:
+    :param split: The dataset split.
     :param args:
     :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans
     :return: The processed dataset ready to be used
 
     """
-    dataset = []
-    for idx, q in enumerate(questions):
-        d = dict()
-        d["question_id"] = q["question_id"]
-        d["question"] = q["question"]
-        d["image_id"] = q["image_id"]
-        d["image_name"] = coco_name_format(q["image_id"], "train")
+    cache_file = "vqa_{0}_dataset_cache.pickle".format(split)
 
-        d["answer"] = annotations[idx]["multiple_choice_answer"]
-        answers = []
-        for ans in annotations[idx]['answers']:
-            answers.append(ans['answer'])
-        d['answers_occurence'] = Counter(answers).most_common()
+    # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
+    if os.path.exists(cache_file):
+        print("Found dataset cache! Loading...")
+        dataset, vocab, \
+        word_to_wid, wid_to_word, \
+        ans_to_aid, aid_to_ans = pickle.load(open(cache_file, 'rb'))
 
-        dataset.append(d)
+    else:
+        # load the annotations and questions files
+        print("Loading {0} annotations".format(split))
+        with open(annotations_file) as ann:
+            j = json.load(ann)
+            annotations = j["annotations"]
 
-    # Get the top 1000 answers so we can filter the dataset to only questions with these answers
-    top_answers = text.get_top_answers(dataset, args.top_answer_limit)
-    dataset = text.filter_dataset(dataset, top_answers)
+        print("Loading {0} questions".format(split))
+        with open(questions_file) as q:
+            j = json.load(q)
+            questions = j["questions"]
 
-    # Process the questions
-    dataset = text.preprocess_questions(dataset)
-    vocab = text.get_vocabulary(dataset)
+        # load up the dataset
+        dataset = []
+        for idx, q in enumerate(questions):
+            d = dict()
+            d["question_id"] = q["question_id"]
+            d["question"] = q["question"]
+            d["image_id"] = q["image_id"]
+            d["image_name"] = coco_name_format(q["image_id"], "train")
 
-    if split == "train":
-        word_to_wid = {w:i for i, w in enumerate(vocab)}
-        wid_to_word = {i:w for i, w in enumerate(vocab)}
+            d["answer"] = annotations[idx]["multiple_choice_answer"]
+            answers = []
+            for ans in annotations[idx]['answers']:
+                answers.append(ans['answer'])
+            d['answers_occurence'] = Counter(answers).most_common()
 
-        ans_to_aid = {a: i for i, a in enumerate(top_answers)}
-        aid_to_ans = {i: a for i, a in enumerate(top_answers)}
+            dataset.append(d)
 
-    else: # split == "val":
-        word_to_wid = maps["word_to_wid"]
-        wid_to_word = maps["wid_to_word"]
-        ans_to_aid = maps["ans_to_aid"]
-        aid_to_ans = maps["aid_to_ans"]
+        # Get the top 1000 answers so we can filter the dataset to only questions with these answers
+        top_answers = text.get_top_answers(dataset, args.top_answer_limit)
+        dataset = text.filter_dataset(dataset, top_answers)
 
-    dataset = text.remove_tail_words(dataset, vocab)
-    dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
-    dataset = text.encode_answers(dataset, ans_to_aid)
+        # Process the questions
+        dataset = text.preprocess_questions(dataset)
+        vocab = text.get_vocabulary(dataset)
+
+        if split == "train":
+            word_to_wid = {w:i for i, w in enumerate(vocab)}
+            wid_to_word = {i:w for i, w in enumerate(vocab)}
+            ans_to_aid = {a: i for i, a in enumerate(top_answers)}
+            aid_to_ans = {i: a for i, a in enumerate(top_answers)}
+
+        else: # split == "val":
+            word_to_wid = maps["word_to_wid"]
+            wid_to_word = maps["wid_to_word"]
+            ans_to_aid = maps["ans_to_aid"]
+            aid_to_ans = maps["aid_to_ans"]
+
+        dataset = text.remove_tail_words(dataset, vocab)
+        dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
+        dataset = text.encode_answers(dataset, ans_to_aid)
+
+        print("Caching the processed data")
+        pickle.dump([dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans],
+                    open(cache_file, 'wb+'))
 
     return dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans
