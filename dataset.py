@@ -5,29 +5,40 @@ import torch
 import torch.utils.data as data
 from utils import text
 import os
+import os.path as osp
 import numpy as np
 from utils.image import coco_name_format
+from PIL import Image
 
 
-def get_train_dataloader(annotations, questions, images, args, vocab=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, "train", args, vocab=vocab),
+def get_train_dataloader(annotations, questions, images, args, vocab=None, raw_images=False,
+                         transforms=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, "train", args, raw_images=raw_images,
+                                      vocab=vocab, transforms=transforms),
                                  batch_size=args.batch_size,
                                  num_workers=args.num_workers,
                                  shuffle=shuffle)
 
-def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, "val", args, vocab=vocab, maps=maps),
+def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, raw_images=False,
+                       transforms=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, "val", args, raw_images=raw_images,
+                                      vocab=vocab, transforms=transforms, maps=maps),
                                  batch_size=args.batch_size,
                                  num_workers=args.num_workers,
                                  shuffle=shuffle)
 
 
 class VQADataset(data.Dataset):
-    def __init__(self, annotations, questions, images_dataset, split, args, vocab=None, normalize_img=True, maps=None):
+    def __init__(self, annotations, questions, images_dataset, split, args, raw_images=False, transforms=None,
+                 vocab=None, normalize_img=True, maps=None, year=2014):
 
         # the data is saved as a dict where the key is the image_id and the value is the VGG feature vector
-        self.images_dataset = torch.load(images_dataset)
+        if not raw_images:
+            self.images_dataset = torch.load(images_dataset)
+            print("Loaded {0} image embeddings dataset".format(split))
+
         self.split = split
+        self.year = year
 
         self._process_dataset(annotations, questions, args, split, maps=maps)
 
@@ -35,7 +46,11 @@ class VQADataset(data.Dataset):
             self.vocab = vocab
 
         self.embed_question = args.embed_question
+
+        self.raw_images = raw_images
         self.normalize_img = normalize_img
+        self.transforms = transforms
+        self.root = args.image_root
 
     def _process_dataset(self, annotations, questions, args,  split="train", maps=None):
         """
@@ -44,7 +59,7 @@ class VQADataset(data.Dataset):
         """
         self.data, self.vocab, \
         self.word_to_wid, self.wid_to_word, \
-        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, args, maps,
+        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, maps,
                                                                args.top_answer_limit, args.max_length)
 
     def __len__(self):
@@ -55,14 +70,21 @@ class VQADataset(data.Dataset):
 
         item = dict()
 
-        # Process Visual (image or features)
-        # the preprocess script should have already saved these as Torch tensors
-        item["image_id"] = d["image_id"]
-        img = self.images_dataset[d["image_id"]].squeeze()
-        if self.normalize_img:
-            norm = img.mul(img)
-            norm = norm.sum(dim=0, keepdim=True).sqrt()
-            img = img.div(norm)
+        if self.raw_images:
+            item["image_id"] = d["image_id"]
+            img = Image.open(osp.join(osp.expanduser(self.root), "{0}{1}".format(self.split, self.year),
+                                      d["image_name"]))
+            img = img.convert(mode='RGB')
+
+            if self.transforms is not None:
+                img = self.transforms(img)
+
+        else:
+            # Process Visual (image or features)
+            # the preprocess script should have already saved these as Torch tensors
+            item["image_id"] = d["image_id"]
+            img = self.images_dataset[d["image_id"]].squeeze()
+
         item['image'] = img
 
         # Process Question (word token)
@@ -80,16 +102,18 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=25):
+def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=25,
+                        year=2014):
     """
     Process the questions and annotations into a consolidated dataset.
     This is done only for the training set.
     :param questions_file:
     :param annotations_file:
     :param split: The dataset split.
-    :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans
+    :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans.
     :param top_answer_limit:
     :param max_length:
+    :param year: COCO Dataset release year.
     :return: The processed dataset ready to be used
 
     """
@@ -97,7 +121,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
 
     # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
     if os.path.exists(cache_file):
-        print("Found dataset cache! Loading...")
+        print("Found {0} set cache! Loading...".format(split))
         dataset, vocab, \
         word_to_wid, wid_to_word, \
         ans_to_aid, aid_to_ans = pickle.load(open(cache_file, 'rb'))
@@ -121,7 +145,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
             d["question_id"] = q["question_id"]
             d["question"] = q["question"]
             d["image_id"] = q["image_id"]
-            d["image_name"] = coco_name_format(q["image_id"], "train")
+            d["image_name"] = coco_name_format(q["image_id"], split, year)
 
             d["answer"] = annotations[idx]["multiple_choice_answer"]
             answers = []
