@@ -5,14 +5,14 @@ A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 import torch
 from torch import nn
 from torch.autograd import Variable
-
+from models import extractor
 
 
 class DeeperLSTM(nn.Module):
     def __init__(self, vocab_size, embed_dim=300,
                  image_dim=4096, image_embed_dim=1024,
                  hidden_dim=512, rnn_output_dim=1024,
-                 output_dim=1000):
+                 output_dim=1000, raw_images=False):
         """
 
         :param vocab_size: The number of words in the vocabulary
@@ -24,6 +24,10 @@ class DeeperLSTM(nn.Module):
         :param output_dim: The number of answers to output over.
         """
         super().__init__()
+
+        self.raw_images = raw_images
+        if raw_images:
+            self.feature_extractor = extractor.FeatureExtractor("vgg16")  # base model uses VGG16
 
         self.hidden_dim = hidden_dim
 
@@ -62,7 +66,13 @@ class DeeperLSTM(nn.Module):
         return hidden
 
     def forward(self, img, ques):
-        img_features = self.image_embed(img)
+        if self.raw_images:
+            img_feat = self.feature_extractor(img)
+        else:
+            img_feat = img
+
+        img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
+        img_features = self.image_embed(img_feat_norm)
 
         q = self.embedding(ques)  # BxTxD
 
