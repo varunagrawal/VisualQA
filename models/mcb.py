@@ -9,6 +9,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from pytorch_fft.fft.autograd import Fft, Ifft
+from models import extractor
 
 
 class MulitmodalCompactBilinearPool(nn.Module):
@@ -34,7 +35,6 @@ class MulitmodalCompactBilinearPool(nn.Module):
 
     def forward(self, *x):
         feature_size = x[0].size()
-
         y = [0]*self.n_modalities
 
         for i, d in enumerate(x):
@@ -55,14 +55,21 @@ class MulitmodalCompactBilinearPool(nn.Module):
             # inverse FFT
             phi, _ = ifft(x_real, x_imag)  # we just want the real part
 
-        return phi.view(feature_size)  # resize to original shape
+        # print(phi.size())
+        return phi#.view(feature_size)  # resize to original shape
 
 
 class MCBModel(nn.Module):
     def __init__(self, vocab_size, embed_dim=300,
                  image_dim=2048, hidden_dim=1024,
-                 mcb_dim=16000, output_dim=1000):
+                 mcb_dim=16000, output_dim=1000,
+                 raw_images=True):
         super().__init__()
+
+        assert raw_images == True, "Need raw images since saved embeddings take too much memory"
+
+        # MCB model uses ResNet-152
+        self.feature_extractor = extractor.FeatureExtractor("resnet152")
 
         self.embedding = nn.Sequential(
             nn.Linear(vocab_size, embed_dim),
@@ -79,11 +86,12 @@ class MCBModel(nn.Module):
             nn.Conv2d(mcb_dim, 512, kernel_size=1),
             nn.ReLU(),
             nn.Conv2d(512, 1, kernel_size=1),
-            nn.Softmax()
+            nn.Softmax(dim=1)
         )
         self.classification = nn.Linear(mcb_dim, output_dim)
 
-    def forward(self, img_feat, ques):
+    def forward(self, img, ques):
+        img_feat = self.feature_extractor(img)
         img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
 
         q = self.embedding(ques)  # BxTxD
@@ -111,8 +119,9 @@ class MCBModel(nn.Module):
         att_x = att_x.view(img_feat.size(0), img_feat.size(2), img_feat.size(3), self.mcb_dim)  # BxHxWxM
         att_x = att_x.permute(0, 3, 1, 2).contiguous()  # BxMxHxW
 
-        att_x= self.attention(att_x)
-        img_att_x = img_feat_norm.mul(att_x.repeat(att_x.size(0), img_feat.size(1), att_x.size(2), att_x.size(3)))
+        att_x = self.attention(att_x)
+
+        img_att_x = img_feat_norm.mul(att_x.repeat(1, img_feat.size(1), 1, 1))
         img_att_x = img_att_x.sum(dim=3).sum(dim=2)
 
         # combine attended visual features and question embedding
