@@ -44,7 +44,8 @@ class VQADataset(data.Dataset):
         """
         self.data, self.vocab, \
         self.word_to_wid, self.wid_to_word, \
-        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, args, maps)
+        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, args, maps,
+                                                               args.top_answer_limit, args.max_length)
 
     def __len__(self):
         return len(self.data)
@@ -79,15 +80,16 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions_file, annotations_file, split, args, maps=None):
+def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=25):
     """
     Process the questions and annotations into a consolidated dataset.
     This is done only for the training set.
     :param questions_file:
     :param annotations_file:
     :param split: The dataset split.
-    :param args:
     :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans
+    :param top_answer_limit:
+    :param max_length:
     :return: The processed dataset ready to be used
 
     """
@@ -129,8 +131,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, args, maps=None
 
             dataset.append(d)
 
-        # Get the top 1000 answers so we can filter the dataset to only questions with these answers
-        top_answers = text.get_top_answers(dataset, args.top_answer_limit)
+        # Get the top N answers so we can filter the dataset to only questions with these answers
+        top_answers = text.get_top_answers(dataset, top_answer_limit)
         dataset = text.filter_dataset(dataset, top_answers)
 
         # Process the questions
@@ -150,7 +152,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, args, maps=None
             aid_to_ans = maps["aid_to_ans"]
 
         dataset = text.remove_tail_words(dataset, vocab)
-        dataset = text.encode_questions(dataset, word_to_wid, args.max_length)
+        dataset = text.encode_questions(dataset, word_to_wid, max_length)
         dataset = text.encode_answers(dataset, ans_to_aid)
 
         print("Caching the processed data")
