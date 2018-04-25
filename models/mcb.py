@@ -8,13 +8,12 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from pytorch_fft.fft.autograd import Fft, Ifft
 from models import extractor
 
 
 class MulitmodalCompactBilinearPool(nn.Module):
     """
-    Multimodal Compact Bilinearl Pooling Module
+    Multimodal Compact Bilinear Pooling Module
     """
     def __init__(self, original_dim, projection_dim, n_modalities=2):
         super().__init__()
@@ -41,25 +40,25 @@ class MulitmodalCompactBilinearPool(nn.Module):
             y[i] = d.mm(self.C[i]).view(feature_size[0], -1)
 
         phi = y[0]
-        fft = Fft()
-        ifft = Ifft()
+        signal_sizes = y[0].size()[1:]  # signal_sizes should not have batch dimension as per docs
 
         for i in range(1, self.n_modalities):
-            i_real, i_imag = fft(phi, Variable(torch.zeros(phi.size()).cuda()))
-            j_real, j_imag = fft(y[i], Variable(torch.zeros(phi.size()).cuda()))
+            i_fft = torch.rfft(phi, 1)
+            j_fft = torch.rfft(y[i], 1)
 
-            # complex element wise multiplication
-            x_real = i_real.mul(j_real) - i_imag.mul(j_imag)
-            x_imag = i_real.mul(j_imag) + i_imag.mul(j_real)
+            # element wise multiplication
+            x = i_fft.mul(j_fft)
 
             # inverse FFT
-            phi, _ = ifft(x_real, x_imag)  # we just want the real part
+            phi = torch.irfft(x, 1, signal_sizes=signal_sizes)
 
-        # print(phi.size())
-        return phi#.view(feature_size)  # resize to original shape
+        return phi
 
 
 class MCBModel(nn.Module):
+    """
+    The model from https://arxiv.org/pdf/1606.01847.pdf
+    """
     def __init__(self, vocab_size, embed_dim=300,
                  image_dim=2048, hidden_dim=1024,
                  mcb_dim=16000, output_dim=1000,
