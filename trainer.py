@@ -23,10 +23,10 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         output = model(img, q)
 
         loss = criterion(output, ans)
-        avg_loss.update(loss.data[0], q.size(0))
+        avg_loss.update(loss.item(), q.size(0))
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc)
+        avg_acc.update(acc.item())
 
         optimizer.zero_grad()
         loss.backward()
@@ -62,9 +62,9 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
         loss = criterion(output, ans)
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc)
+        avg_acc.update(acc.item())
 
-        avg_loss.update(loss.data[0], q.size(0))
+        avg_loss.update(loss.item(), q.size(0))
 
         if vis and i % args.visualize_freq == 0:
             vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
