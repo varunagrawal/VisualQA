@@ -55,19 +55,6 @@ class DeeperLSTM(nn.Module):
             nn.Linear(output_dim, output_dim),
         )
 
-    def _init_hidden(self, q):
-        """
-        Initialize the hidden state of the RNN
-        :param q: The question embedding. Used for getting the hidden state dimensions.
-        :return: The initial hidden state for the RNN
-        """
-        hidden = [torch.zeros(self.num_rnn_layers*self.num_directions, q.size(0), self.hidden_dim),
-                  torch.zeros(self.num_rnn_layers*self.num_directions, q.size(0), self.hidden_dim)]
-        if torch.cuda.is_available():
-            hidden = [x.cuda() for x in hidden]
-
-        return hidden
-
     def forward(self, img, ques):
         if self.raw_images:
             img_feat = self.feature_extractor(img)
@@ -79,10 +66,7 @@ class DeeperLSTM(nn.Module):
 
         q = self.embedding(ques)  # BxTxD
 
-        # initialize the hidden state for each mini-batch
-        hidden = self._init_hidden(q)
-
-        _, hidden = self.rnn(q, hidden)
+        _, hidden = self.rnn(q)  # initial hidden state defaults to 0
 
         hidden_state, cell = hidden  # NxBxD
 
