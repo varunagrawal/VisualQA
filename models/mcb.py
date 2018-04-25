@@ -7,7 +7,6 @@ import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from models import extractor
 
 
@@ -30,7 +29,7 @@ class MulitmodalCompactBilinearPool(nn.Module):
                 if torch.cuda.is_available():
                     C = C.cuda()
 
-            self.C.append(Variable(C))
+            self.C.append(C)
 
     def forward(self, *x):
         feature_size = x[0].size()

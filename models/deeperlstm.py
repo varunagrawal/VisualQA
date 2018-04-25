@@ -4,7 +4,6 @@ A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 
 import torch
 from torch import nn
-from torch.autograd import Variable
 from models import extractor
 
 
@@ -58,8 +57,8 @@ class DeeperLSTM(nn.Module):
         :param q: The question embedding. Used for getting the hidden state dimensions.
         :return: The initial hidden state for the RNN
         """
-        hidden = [Variable(torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim)),
-                  Variable(torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim))]
+        hidden = [torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim),
+                  torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim)]
         if torch.cuda.is_available():
             hidden = [x.cuda() for x in hidden]
 

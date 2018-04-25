@@ -7,7 +7,6 @@ import json
 import torch
 from torchvision import transforms
 from torch.utils import data
-from torch.autograd import Variable
 from tqdm import tqdm
 from PIL import Image
 import os.path as osp
@@ -73,7 +72,7 @@ def main(file, root, split, arch):
 
     print("Starting")
     for idx, (img, id) in enumerate(tqdm(data_loader, total=len(data_loader))):
-        img_var = Variable(img).cuda()
+        img_var = img.cuda()
         embedding = model(img_var)
         embeddings[id[0, 0]] = embedding.data.cpu()
 

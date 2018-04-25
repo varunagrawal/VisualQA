@@ -5,7 +5,6 @@ from PIL import Image, ImageFont, ImageDraw
 import numpy as np
 import torch
 from torch import nn
-from torch.autograd import Variable
 from torchvision import transforms
 from dataset import process_vqa_dataset
 
@@ -83,12 +82,11 @@ def main():
     im = Image.open(args.image)
     img = img_transforms(im)
     img = img.unsqueeze(0)  # add batch dimension
-    img_var = Variable(img)
 
     if torch.cuda.is_available():
-        img_var = img_var.cuda()
+        img = img.cuda()
 
-    img_features = vision_model(img_var)
+    img_features = vision_model(img)
 
     print("Processing question")
     q = text.process_single_question(args.question, vocab, word_to_wid)
@@ -98,15 +96,15 @@ def main():
     for k in range(len(q["question_wids"])):
         one_hot_vec[k, q['question_wids'][k]] = 1
 
-    q_var = Variable(torch.from_numpy(one_hot_vec))
+    q = torch.from_numpy(one_hot_vec)
     if torch.cuda.is_available():
-        q_var = q_var.cuda()
+        q = q.cuda()
 
     # Add the batch dimension
-    q_var = q_var.unsqueeze(0).float()
+    q = q.unsqueeze(0).float()
 
     # Get the model output and classify for the final value
-    output = model(img_features, q_var)
+    output = model(img_features, q)
     output = classifier(output).data
 
     _, ans_id = torch.max(output, dim=1)

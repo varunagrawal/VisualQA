@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import Variable
 from metrics import accuracy
 import os, os.path as osp
 
@@ -16,9 +15,9 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         img = sample["image"]
         ans_label = sample['answer_id']
 
-        q = Variable(q).cuda()
-        img = Variable(img).cuda()
-        ans = Variable(ans_label).cuda()
+        q = q.cuda()
+        img = img.cuda()
+        ans = ans_label.cuda()
 
         output = model(img, q)
 
@@ -53,9 +52,9 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
         img = sample["image"]
         ans_label = sample['answer_id']
 
-        q = Variable(q).cuda()
-        img = Variable(img).cuda()
-        ans = Variable(ans_label).cuda()
+        q = q.cuda()
+        img = img.cuda()
+        ans = ans_label.cuda()
 
         output = model(img, q)
 
