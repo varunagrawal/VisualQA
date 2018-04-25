@@ -6,6 +6,8 @@ import os, os.path as osp
 def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     # Set the model to train mode
     model.train()
+    # enable autograd tracking
+    torch.set_grad_enabled(True)
 
     avg_loss = AverageMeter()
     avg_acc = AverageMeter()
