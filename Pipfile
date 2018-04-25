@@ -1,28 +1,21 @@
 [[source]]
-
 name = "pypi"
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 
-
 [requires]
-
 python_version = "3.5"
-
 
 [dev-packages]
 
-
-
 [packages]
-
 numpy = "*"
 scipy = "*"
 tqdm = "*"
 visdom = "*"
 crayons = "*"
-"50178e2" = {file = "http://download.pytorch.org/whl/cu80/torch-0.2.0.post3-cp35-cp35m-manylinux1_x86_64.whl"}
 torchvision = "*"
 cffi = "*"
-pytorch-fft = "*"
 pip = "*"
+ipython = "*"
+torch = "*"
