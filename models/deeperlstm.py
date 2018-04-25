@@ -49,7 +49,11 @@ class DeeperLSTM(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Linear(rnn_output_dim, output_dim))
+            nn.Linear(rnn_output_dim, output_dim),
+            nn.Tanh(),
+            nn.Dropout(p=0.5),
+            nn.Linear(output_dim, output_dim),
+        )
 
     def _init_hidden(self, q):
         """
@@ -79,6 +83,7 @@ class DeeperLSTM(nn.Module):
 
         # initialize the hidden state for each mini-batch
         hidden = self._init_hidden(q)
+
         lstm_out, hidden = self.rnn(q, hidden)
 
         hidden_state, cell = hidden
