@@ -26,7 +26,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         avg_loss.update(loss.data[0], q.size(0))
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc.data[0])
+        avg_acc.update(acc)
 
         optimizer.zero_grad()
         loss.backward()
@@ -62,7 +62,7 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
         loss = criterion(output, ans)
 
         acc = accuracy(output, ans)
-        avg_acc.update(acc.data[0])
+        avg_acc.update(acc)
 
         avg_loss.update(loss.data[0], q.size(0))
 
