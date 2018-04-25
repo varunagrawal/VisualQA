@@ -9,7 +9,7 @@ from torch import nn
 class DeeperEmbedLSTM(nn.Module):
     def __init__(self):
         super().__init__()
-        pass
+        raise NotImplemented
 
     def forward(self, x):
-        pass
+        raise NotImplemented
