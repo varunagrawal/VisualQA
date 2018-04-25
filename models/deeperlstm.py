@@ -43,9 +43,9 @@ class DeeperLSTM(nn.Module):
         self.num_rnn_layers = 2
         self.num_directions = 1
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers)
-        self.fc = nn.Linear(self.num_rnn_layers * hidden_dim, rnn_output_dim)
-        self.activ = nn.Tanh()
+        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers, batch_first=True)
+        self.fc = nn.Linear(self.num_rnn_layers * 2 * hidden_dim, rnn_output_dim)  # 2 for hidden + cell
+        self.tanh = nn.Tanh()
 
         self.mlp = nn.Sequential(
             nn.Dropout(p=0.5),
@@ -61,8 +61,8 @@ class DeeperLSTM(nn.Module):
         :param q: The question embedding. Used for getting the hidden state dimensions.
         :return: The initial hidden state for the RNN
         """
-        hidden = [torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim),
-                  torch.zeros(self.num_rnn_layers*self.num_directions, q.size(1), self.hidden_dim)]
+        hidden = [torch.zeros(self.num_rnn_layers*self.num_directions, q.size(0), self.hidden_dim),
+                  torch.zeros(self.num_rnn_layers*self.num_directions, q.size(0), self.hidden_dim)]
         if torch.cuda.is_available():
             hidden = [x.cuda() for x in hidden]
 
@@ -79,22 +79,22 @@ class DeeperLSTM(nn.Module):
 
         q = self.embedding(ques)  # BxTxD
 
-        q = q.transpose(0, 1)  # makes this TxBxD
-
         # initialize the hidden state for each mini-batch
         hidden = self._init_hidden(q)
 
-        lstm_out, hidden = self.rnn(q, hidden)
+        _, hidden = self.rnn(q, hidden)
 
-        hidden_state, cell = hidden
+        hidden_state, cell = hidden  # NxBxD
 
-        # convert from TxBxD to BxTxD and make contiguous
-        hidden_state =  hidden_state.transpose(0, 1).contiguous()
+        # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
+        hidden_state, cell =  hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
-        hidden_state = hidden_state.view(hidden_state.size(0), -1)
+        hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
+        # Concatenate the hidden state and the cell state to get the question embedding
+        q_embed = torch.cat((hidden_state, cell), dim=1)
 
-        x = self.fc(hidden_state)
-        x = self.activ(x)
+        x = self.fc(q_embed)
+        x = self.tanh(x)
 
         # Fusion
         x = x.mul(img_features)
