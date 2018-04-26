@@ -153,6 +153,9 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
                 answers.append(ans['answer'])
             d['answers_occurence'] = Counter(answers).most_common()
 
+            d["question_type"] = annotations[idx]["question_type"]
+            d["answer_type"] = annotations[idx]["answer_type"]
+
             dataset.append(d)
 
         # Get the top N answers so we can filter the dataset to only questions with these answers
