@@ -64,7 +64,8 @@ class MCBModel(nn.Module):
                  raw_images=True):
         super().__init__()
 
-        assert raw_images == True, "Need raw images since saved embeddings take too much memory"
+        # Flag to indicate use of raw images
+        self.raw_images = raw_images
 
         # MCB model uses ResNet-152
         self.feature_extractor = extractor.FeatureExtractor("resnet152")
@@ -89,7 +90,10 @@ class MCBModel(nn.Module):
         self.classification = nn.Linear(mcb_dim, output_dim)
 
     def forward(self, img, ques):
-        img_feat = self.feature_extractor(img)
+        if self.raw_images:
+            img_feat = self.feature_extractor(img)
+        else:
+            img_feat = img
         img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
 
         q = self.embedding(ques)  # BxTxD
