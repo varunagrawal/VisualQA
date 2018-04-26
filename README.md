@@ -34,6 +34,12 @@ To run the training code, just type
 make
 ```
 
+If you want to use the raw RGB images from COCO, you can type
+```shell
+make raw_images
+```
+This takes the same arguments as `make`.
+
 You can get a list of options with `make options` or `python main.py -h`.
 
 Check out the `Makefile` to get an idea of how to run the code.
@@ -49,6 +55,19 @@ The minimum arguments required are:
 4. The VQA val annotations dataset
 5. The VQA val open-ended questions dataset
 6. Path to the COCO val image feature embeddings
+
+### Evaluation
+
+Evaluating the performance of the model on a fine-grained basis is important. Thus this repo supports evaluating 
+answers to questions based on answer type (e.g. "yes/no" questions).
+
+To evaluate the model, run
+```shell
+make evaluate
+```
+
+You are required to pass in the `--resume` argument to point to the trained model weights. The other arguments are 
+the same as in training.
 
 ### Demo
 
