@@ -52,6 +52,10 @@ def main():
     arch = Models[args.arch].value
     model = arch(len(vocab), output_dim=args.top_answer_limit, raw_images=args.raw_images)
 
+    if args.resume:
+        state = torch.load(args.resume)
+        model.load_state_dict(state["model"])
+
     if torch.cuda.is_available():
         model.cuda()
 

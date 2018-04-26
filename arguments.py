@@ -40,6 +40,9 @@ def parse_args():
     parser.add_argument('-j', "--num_workers", default=4, type=int)
     parser.add_argument("--save_dir", default="weights", help="Directory where model weights are stored")
     parser.add_argument("--gpu", default=0, type=int, help="The GPU to use for training. For multi-gpu setups.")
+
+    parser.add_argument("--resume", default=None, help="Path to the weights file to resume training from")
+
     parser.add_argument("--visualize", action="store_true", help="Flag to indicate use of Visdom for visualization")
     parser.add_argument("--visualize_freq", default=20, type=int,
                         help="Number of iterations after which Visdom should update loss graph")
