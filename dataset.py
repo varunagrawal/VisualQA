@@ -98,6 +98,7 @@ class VQADataset(data.Dataset):
             item['question'] = torch.from_numpy(one_hot_vec).float()
 
         item['answer_id'] = d['answer_id']
+        item['answer_type'] = d['answer_type']
 
         return item
 
