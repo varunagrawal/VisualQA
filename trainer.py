@@ -84,7 +84,7 @@ def save_checkpoint(model, args, epoch):
         "model": model.state_dict(),
         "args": args
     }
-    filename = 'vqa_checkpoint_{0}_{1}.pth.tar'.format(args.arch, epoch)
+    filename = 'vqa_checkpoint_{0}_{1}.pth'.format(args.arch, epoch)
     torch.save(state, osp.join(args.save_dir, filename))
 
 
