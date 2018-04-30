@@ -88,7 +88,7 @@ def get_top_answers(dataset, top=1000, display=True):
     print("Finding top {0} answers".format(top))
     counts = {}
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        ans = d["answer"]
+        ans = d["answer"].lower()
         counts[ans] = counts.get(ans, 0) + 1
 
     print("{0} unqiue answers".format(len(counts)))
@@ -108,7 +108,7 @@ def encode_answers(dataset, ans_to_aid, display=True):
     out_of_scope = len(ans_to_aid) - 1  # the last label is reserved for the rest of the answers
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        d["answer_id"] = ans_to_aid.get(d['answer'], out_of_scope)
+        d["answer_id"] = ans_to_aid.get(d['answer'].lower(), out_of_scope)
 
     return dataset
 
