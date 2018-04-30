@@ -31,7 +31,9 @@ def evaluate(model, dataloader):
         ans_label = ans_label.cuda()
 
         output = model(img, q)
-        ans = torch.zeros(img.size(0)).long().cuda()#torch.max(functional.softmax(output, dim=1), dim=1)[1]
+        output = functional.softmax(output, dim=1)  # this is not needed but we want to be numerically stable
+        ans = torch.max(output, dim=1)[1]
+
         result = ans.eq(ans_label).cpu().detach().numpy()
 
         for idx, (r, a) in enumerate(zip(result, ans_type)):
@@ -54,6 +56,7 @@ def main():
     vocab = vqa_loader.dataset.vocab
 
     maps = {
+        "vocab": vocab,
         "word_to_wid": vqa_loader.dataset.word_to_wid,
         "wid_to_word": vqa_loader.dataset.wid_to_word,
         "ans_to_aid": vqa_loader.dataset.ans_to_aid,

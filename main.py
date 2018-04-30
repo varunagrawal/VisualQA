@@ -33,6 +33,7 @@ def main():
     vocab = vqa_loader.dataset.vocab
 
     maps = {
+        "vocab": vocab,
         "word_to_wid": vqa_loader.dataset.word_to_wid,
         "wid_to_word": vqa_loader.dataset.wid_to_word,
         "ans_to_aid": vqa_loader.dataset.ans_to_aid,
@@ -56,10 +57,9 @@ def main():
         state = torch.load(args.resume)
         model.load_state_dict(state["model"])
 
-    if torch.cuda.is_available():
-        model.cuda()
+    model.cuda()
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss().cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=args.decay_interval, gamma=args.lr_decay)
 
