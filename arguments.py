@@ -6,12 +6,12 @@ def parse_args():
 
     parser.add_argument("annotations", metavar="TRAIN_ANN", help="The VQA annotations JSON file")
     parser.add_argument("questions", metavar="TRAIN_QUES", help="The VQA questions JSON file")
-    parser.add_argument("images", metavar="TRAIN_IMAGES",
+    parser.add_argument("--images", metavar="TRAIN_IMAGES",
                         help="The file containing either the tensors of the CNN embeddings of COCO images or "
                              "the json of images")
     parser.add_argument("val_annotations", metavar="VAL_ANN", help="The VQA val annotations JSON file")
     parser.add_argument("val_questions", metavar="VAL_QUES", help="The VQA val questions JSON file")
-    parser.add_argument("val_images", metavar="VAL_IMAGES",
+    parser.add_argument("--val_images", metavar="VAL_IMAGES",
                         help="The file containing either the tensors of the CNN embeddings or the json file of "
                              "COCO images")
     parser.add_argument("--image_root", help="Root path to the images directory")
