@@ -3,7 +3,6 @@ import dataset
 from models.model import Models
 import numpy as np
 import torch
-from torch import nn
 from torch.nn import functional
 from torchvision import transforms
 from arguments import parse_args
@@ -13,11 +12,13 @@ from tqdm import tqdm
 def evaluate(model, dataloader):
     # switch to evaluate mode
     model.eval()
+    # disable autograd tracking
+    torch.set_grad_enabled(False)
 
     results = {
-        'yes/no': np.zeros(len(dataloader.dataset)),
-        'number': np.zeros(len(dataloader.dataset)),
-        'other': np.zeros(len(dataloader.dataset))
+        'yes/no': [],
+        'number': [],
+        'other': []
     }
 
     for i, sample in tqdm(enumerate(dataloader), total=len(dataloader)):
@@ -37,7 +38,7 @@ def evaluate(model, dataloader):
         result = ans.eq(ans_label).cpu().detach().numpy()
 
         for idx, (r, a) in enumerate(zip(result, ans_type)):
-            results[a][i*dataloader.batch_size + idx] = result[idx]
+            results[a].append(result[idx])
 
     return results
 
@@ -90,6 +91,7 @@ def main():
         results = evaluate(model, val_loader)
 
     for k in results.keys():
+        results[k] = np.asarray(results[k])
         acc = results[k].sum() / results[k].shape
         print("Accuracy for {0} type answers: \t\t{1}".format(k, acc))
 
