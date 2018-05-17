@@ -28,7 +28,7 @@ Alternatively, you can find them [here](https://1drv.ms/f/s!Au18pri6pxSNlop81AhX
 
 ### Training
 
-To run the training code, just type
+To run the training code with default values, just type
 
 ```
 make

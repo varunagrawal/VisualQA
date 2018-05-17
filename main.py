@@ -60,7 +60,9 @@ def main():
     model.cuda()
 
     criterion = nn.CrossEntropyLoss().cuda()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
+
+    # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
+    optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=args.decay_interval, gamma=args.lr_decay)
 
     if args.visualize:
