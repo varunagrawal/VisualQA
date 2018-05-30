@@ -51,13 +51,20 @@ def get_vocabulary(dataset, min_word_count=0):
 
 
 def remove_tail_words(dataset, vocab, display=True):
+    """
+    Replace infrequent words which are not in `vocab` with UNK
+    :param dataset:
+    :param vocab:
+    :param display:
+    :return:
+    """
     if display:
-        print("Removing tail words")
+        print("Removing tail words and replacing with UNK")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
         words = d["question_words"]
         question = [w if w in vocab else 'UNK' for w in words]
-        d["question_words_UNK"] = question
+        d["final_question"] = question
 
     return dataset
 
@@ -75,10 +82,10 @@ def encode_questions(dataset, word_to_wid, max_length=25, display=True):
         print("Encoding the questions")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        d["question_length"] = min(len(d["question_words_UNK"]), max_length)
+        d["question_length"] = min(len(d["final_question"]), max_length)
         d["question_wids"] = np.zeros(max_length, dtype=np.uint32)  # 0 -> UNK
 
-        for k, w in enumerate(d["question_words_UNK"]):
+        for k, w in enumerate(d["final_question"]):
             if k < max_length:
                 wid = word_to_wid.get(w, word_to_wid["UNK"])
                 d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing

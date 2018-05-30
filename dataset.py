@@ -13,19 +13,20 @@ from PIL import Image
 
 def get_train_dataloader(annotations, questions, images, args, vocab=None, raw_images=False,
                          transforms=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, "train", args, raw_images=raw_images,
-                                      vocab=vocab, transforms=transforms),
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 shuffle=shuffle)
+    return data.DataLoader(VQADataset(annotations, questions, images, "train", args,
+                                      raw_images=raw_images, vocab=vocab, transforms=transforms),
+                           batch_size=args.batch_size,
+                           num_workers=args.num_workers,
+                           shuffle=shuffle)
+
 
 def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, raw_images=False,
                        transforms=None, shuffle=True):
     return data.DataLoader(VQADataset(annotations, questions, images, "val", args, raw_images=raw_images,
                                       vocab=vocab, transforms=transforms, maps=maps),
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 shuffle=shuffle)
+                           batch_size=args.batch_size,
+                           num_workers=args.num_workers,
+                           shuffle=shuffle)
 
 
 class VQADataset(data.Dataset):
@@ -161,19 +162,23 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
 
         # Get the top N answers so we can filter the dataset to only questions with these answers
         top_answers = text.get_top_answers(dataset, top_answer_limit)
-        dataset = text.filter_dataset(dataset, top_answers)
-
-        # Process the questions
-        dataset = text.preprocess_questions(dataset)
 
         if split == "train":
-            vocab = text.get_vocabulary(dataset)
-            word_to_wid = {w:i+1 for i, w in enumerate(vocab)}  # 0 is used for padding
-            wid_to_word = {i+1:w for i, w in enumerate(vocab)}
-            ans_to_aid = {a:i for i, a in enumerate(top_answers)}
-            aid_to_ans = {i:a for i, a in enumerate(top_answers)}
+            dataset = text.filter_dataset(dataset, top_answers)
 
-        else: # split == "val":
+            # Process the questions
+            dataset = text.preprocess_questions(dataset)
+
+            vocab = text.get_vocabulary(dataset)
+            word_to_wid = {w: i+1 for i, w in enumerate(vocab)}  # 0 is used for padding
+            wid_to_word = {i+1: w for i, w in enumerate(vocab)}
+            ans_to_aid = {a: i for i, a in enumerate(top_answers)}
+            aid_to_ans = {i: a for i, a in enumerate(top_answers)}
+
+        else:  # split == "val":
+            # Process the questions
+            dataset = text.preprocess_questions(dataset)
+
             vocab = maps["vocab"]
             word_to_wid = maps["word_to_wid"]
             wid_to_word = maps["wid_to_word"]
