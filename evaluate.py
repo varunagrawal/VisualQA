@@ -37,7 +37,7 @@ def evaluate(model, dataloader, maps):
 
         for idx in range(ans.shape[0]):  # iterate through the answers
             results.append({
-                "question_id": question_id[idx],
+                "question_id": int(question_id[idx]),
                 "answer": maps["aid_to_ans"][ans[idx]]
             })
 
