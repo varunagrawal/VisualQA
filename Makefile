@@ -27,7 +27,7 @@ options:
     python main.py -h
 
 evaluate:
-    python evaluate.py ~/datasets/VQA2/v2_mscoco_train2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_train2014_questions.json image_embeddings/coco_train_vgg_fc7.pth ~/datasets/VQA2/v2_mscoco_val2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_val2014_questions.json image_embeddings/coco_val_vgg_fc7.pth --resume weights/vqa_checkpoint_DeeperLSTM_149.pth.tar --batch_size 5
+    python evaluation/main.py ~/datasets/VQA2/v2_mscoco_train2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_train2014_questions.json image_embeddings/coco_train_vgg_fc7.pth ~/datasets/VQA2/v2_mscoco_val2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_val2014_questions.json image_embeddings/coco_val_vgg_fc7.pth --resume weights/vqa_checkpoint_DeeperLSTM_149.pth.tar --batch_size 5
 
 demo:
     python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN)

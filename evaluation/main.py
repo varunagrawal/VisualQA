@@ -7,19 +7,16 @@ from torch.nn import functional
 from torchvision import transforms
 from arguments import parse_args
 from tqdm import tqdm
+import json
 
 
-def evaluate(model, dataloader):
+def evaluate(model, dataloader, maps):
     # switch to evaluate mode
     model.eval()
     # disable autograd tracking
     torch.set_grad_enabled(False)
 
-    results = {
-        'yes/no': [],
-        'number': [],
-        'other': []
-    }
+    results = []
 
     for i, sample in tqdm(enumerate(dataloader), total=len(dataloader)):
         q = sample['question']
@@ -33,14 +30,18 @@ def evaluate(model, dataloader):
 
         output = model(img, q)
         output = functional.softmax(output, dim=1)  # this is not needed but we want to be numerically stable
+
         ans = torch.max(output, dim=1)[1]
+        ans = ans.cpu().detach().numpy()
 
-        result = ans.eq(ans_label).cpu().detach().numpy()
+        for idx in range(ans.size(0)):  # iterate through the answers
+            results.append({
+                "question_id": sample['question_id'][idx].numpy(),
+                "answer": map["aid_to_ans"][ans[idx]]
+            })
 
-        for idx, (r, a) in enumerate(zip(result, ans_type)):
-            results[a].append(result[idx])
-
-    return results
+    json.dump(results, open("OpenEnded_mscoco_results.json", 'w'))
+    print("Saved results")
 
 
 def main():
@@ -88,12 +89,7 @@ def main():
         model.cuda()
 
     with torch.no_grad():
-        results = evaluate(model, val_loader)
-
-    for k in results.keys():
-        results[k] = np.asarray(results[k])
-        acc = results[k].sum() / results[k].shape
-        print("Accuracy for {0} type answers: \t\t{1}".format(k, acc))
+        evaluate(model, val_loader, maps)
 
 
 if __name__ == "__main__":
