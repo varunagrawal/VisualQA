@@ -20,9 +20,9 @@ def preprocess_questions(dataset, method="nltk", display=True):
     for idx, d in enumerate(tqdm(dataset, leave=display)):
         s = d["question"]
         if method == "nltk":
-            d["question_words"] = nltk.word_tokenize(str(s).lower())
+            d["question_tokens"] = nltk.word_tokenize(str(s).lower())
         else:
-            d["question_words"] = tokenize(s)
+            d["question_tokens"] = tokenize(s)
     return dataset
 
 
@@ -36,7 +36,7 @@ def get_vocabulary(dataset, min_word_count=0):
     counts = {}
     print("Calculating word counts in questions")
     for d in dataset:
-        for w in d["question_words"]:
+        for w in d["question_tokens"]:
             counts[w] = counts.get(w, 0) + 1
 
     vocab = [w for w, n in counts.items() if n > min_word_count]
@@ -62,7 +62,7 @@ def remove_tail_words(dataset, vocab, display=True):
         print("Removing tail words and replacing with UNK")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        words = d["question_words"]
+        words = d["question_tokens"]
         question = [w if w in vocab else 'UNK' for w in words]
         d["final_question"] = question
 
@@ -106,7 +106,7 @@ def get_top_answers(dataset, top=1000, display=True):
     ans_counts = sorted([(count, ans) for ans, count in counts.items()], reverse=True)
     top_answers = []
 
-    for i in range(top-1):  # the last answer is reserved for out_of_scope
+    for i in range(top):
         top_answers.append(ans_counts[i][1])
 
     if display:
@@ -126,7 +126,7 @@ def encode_answers(dataset, ans_to_aid, display=True):
     return dataset
 
 
-def filter_dataset(dataset, top_answers, display=True):
+def filter_questions(dataset, top_answers, display=True):
     filtered_dataset = []
     for idx, d in enumerate(tqdm(dataset, leave=display)):
         if d["answer"] in top_answers:
@@ -138,7 +138,7 @@ def filter_dataset(dataset, top_answers, display=True):
 
 
 def process_single_question(question, vocab, word_to_wid, max_length=25):
-    d = [{ "question": question }]
+    d = [{"question": question}]
     d = preprocess_questions(d, display=False)
     d = remove_tail_words(d, vocab, display=False)
     encoded_question = encode_questions(d, word_to_wid, max_length, display=False)

@@ -132,13 +132,11 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
         # load the annotations and questions files
         print("Loading {0} annotations".format(split))
         with open(annotations_file) as ann:
-            j = json.load(ann)
-            annotations = j["annotations"]
+            annotations = json.load(ann)["annotations"]
 
         print("Loading {0} questions".format(split))
         with open(questions_file) as q:
-            j = json.load(q)
-            questions = j["questions"]
+            questions = json.load(q)["questions"]
 
         # load up the dataset
         dataset = []
@@ -160,11 +158,11 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
 
             dataset.append(d)
 
-        # Get the top N answers so we can filter the dataset to only questions with these answers
-        top_answers = text.get_top_answers(dataset, top_answer_limit)
-
         if split == "train":
-            dataset = text.filter_dataset(dataset, top_answers)
+            # Get the top N answers so we can filter the dataset to only questions with these answers
+            top_answers = text.get_top_answers(dataset, top_answer_limit)
+
+            dataset = text.filter_questions(dataset, top_answers)
 
             # Process the questions
             dataset = text.preprocess_questions(dataset)
