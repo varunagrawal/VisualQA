@@ -71,7 +71,7 @@ class DeeperLSTM(nn.Module):
         hidden_state, cell = hidden  # NxBxD
 
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
-        hidden_state, cell =  hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
+        hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
         hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
         # Concatenate the hidden state and the cell state to get the question embedding

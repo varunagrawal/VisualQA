@@ -44,6 +44,9 @@ def get_vocabulary(dataset, min_word_count=0):
     # cw = sorted([(n, w) for w, n in counts.items() if n > min_word_count], reverse=True)
     # print('\n'.join(map(str, cw[:20])))
 
+    # Add padding character
+    vocab.insert(0, '^$')
+
     # Add the 'UNK' token
     vocab.append('UNK')  # UNK has it's own ID
 
