@@ -20,9 +20,9 @@ def preprocess_questions(dataset, method="nltk", display=True):
     for idx, d in enumerate(tqdm(dataset, leave=display)):
         s = d["question"]
         if method == "nltk":
-            d["question_words"] = nltk.word_tokenize(str(s).lower())
+            d["question_tokens"] = nltk.word_tokenize(str(s).lower())
         else:
-            d["question_words"] = tokenize(s)
+            d["question_tokens"] = tokenize(s)
     return dataset
 
 
@@ -36,7 +36,7 @@ def get_vocabulary(dataset, min_word_count=0):
     counts = {}
     print("Calculating word counts in questions")
     for d in dataset:
-        for w in d["question_words"]:
+        for w in d["question_tokens"]:
             counts[w] = counts.get(w, 0) + 1
 
     vocab = [w for w, n in counts.items() if n > min_word_count]
@@ -55,9 +55,9 @@ def remove_tail_words(dataset, vocab, display=True):
         print("Removing tail words")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        words = d["question_words"]
+        words = d["question_tokens"]
         question = [w if w in vocab else 'UNK' for w in words]
-        d["question_words_UNK"] = question
+        d["question_tokens_UNK"] = question
 
     return dataset
 
@@ -75,10 +75,10 @@ def encode_questions(dataset, word_to_wid, max_length=25, display=True):
         print("Encoding the questions")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        d["question_length"] = min(len(d["question_words_UNK"]), max_length)
+        d["question_length"] = min(len(d["question_tokens_UNK"]), max_length)
         d["question_wids"] = np.zeros(max_length, dtype=np.uint32)  # 0 -> UNK
 
-        for k, w in enumerate(d["question_words_UNK"]):
+        for k, w in enumerate(d["question_tokens_UNK"]):
             if k < max_length:
                 wid = word_to_wid.get(w, word_to_wid["UNK"])
                 d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing
@@ -99,7 +99,7 @@ def get_top_answers(dataset, top=1000, display=True):
     ans_counts = sorted([(count, ans) for ans, count in counts.items()], reverse=True)
     top_answers = []
 
-    for i in range(top-1):  # the last answer is reserved for out_of_scope
+    for i in range(top):
         top_answers.append(ans_counts[i][1])
 
     if display:

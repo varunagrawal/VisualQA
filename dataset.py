@@ -103,7 +103,7 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=25,
+def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=26,
                         year=2014):
     """
     Process the questions and annotations into a consolidated dataset.
@@ -113,7 +113,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
     :param split: The dataset split.
     :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans.
     :param top_answer_limit:
-    :param max_length:
+    :param max_length: The maximum quetsion length. Taken from the VQA sample code.
     :param year: COCO Dataset release year.
     :return: The processed dataset ready to be used
 
