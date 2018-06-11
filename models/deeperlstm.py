@@ -4,6 +4,7 @@ A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 
 import torch
 from torch import nn
+from torch.nn.utils import rnn
 from models import extractor
 
 
@@ -32,6 +33,7 @@ class DeeperLSTM(nn.Module):
 
         self.image_embed = nn.Sequential(
             nn.Linear(image_dim, image_embed_dim),
+            # nn.Dropout(p=0.5),
             nn.Tanh())
 
         # The question is of the format Batch x T x one-hot vector of size vocab_size
@@ -43,7 +45,7 @@ class DeeperLSTM(nn.Module):
         self.num_rnn_layers = 2
         self.num_directions = 1
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers, batch_first=True)
+        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers, batch_first=True, dropout=0.5)
         self.fc = nn.Linear(self.num_rnn_layers * 2 * hidden_dim, rnn_output_dim)  # 2 for hidden + cell
         self.tanh = nn.Tanh()
 
@@ -55,21 +57,27 @@ class DeeperLSTM(nn.Module):
             nn.Linear(output_dim, output_dim),
         )
 
-    def forward(self, img, ques):
+    def forward(self, img, ques, q_lens):
         if self.raw_images:
             img_feat = self.feature_extractor(img)
         else:
             img_feat = img
 
+        # normalize the image and embed it to the common dimension.
         img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
         img_features = self.image_embed(img_feat_norm)
 
         q = self.embedding(ques)  # BxTxD
 
-        _, hidden = self.rnn(q)  # initial hidden state defaults to 0
-
-        hidden_state, cell = hidden  # NxBxD
-
+        # Get PackedSequence
+        _, sorted_inds = torch.sort(q_lens, descending=True)
+        q = q[sorted_inds]
+        q_lens = q_lens[sorted_inds]
+        q = rnn.pack_padded_sequence(q, q_lens, batch_first=True)
+        
+        # ignore outputs as we only need the embedding with dim NxBxD
+        _, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
+        
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
         hidden_state, cell =  hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
