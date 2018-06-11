@@ -16,8 +16,8 @@ import utils.image
 
 class COCODataset(data.Dataset):
     def __init__(self, input_file, root, transform, split):
-        data = json.load(open(input_file))
-        self.data =  data["images"]
+        dataset = json.load(open(input_file))
+        self.data = dataset["images"]
         self.root = root
         self.transform = transform
         self.split = split
@@ -32,13 +32,23 @@ class COCODataset(data.Dataset):
         img = img.convert(mode='RGB')
 
         # convert to Tensor so we can batch it
-        id = int(item["id"])
-        id = torch.LongTensor([id])
+        idt = torch.LongTensor([int(item["id"])])
 
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, id
+        return img, idt
+
+
+def arguments():
+    parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
+
+    parser.add_argument("file", help="Path to COCO annotations file")
+    parser.add_argument("--arch", default="vgg16", choices=("vgg16", "resnet152"))
+    parser.add_argument("--root", help="Path to the train/val root directory of images")
+    parser.add_argument("--split", default="train", choices=("train", "val"))
+
+    return parser.parse_args()
 
 
 def main(file, root, split, arch):
@@ -96,15 +106,7 @@ def main(file, root, split, arch):
     torch.save(embeddings, osp.join("image_embeddings", image_embedding_file))
 
 
-parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
-
-parser.add_argument("file", help="Path to COCO annotations file")
-parser.add_argument("--arch", default="vgg16", choices=("vgg16", "resnet152"))
-parser.add_argument("--root", help="Path to the train/val root directory of images")
-parser.add_argument("--split", default="train", choices=("train", "val"))
-
-args = parser.parse_args()
-
+args = arguments()
 # "/home/varun/datasets/MSCOCO/annotations/instances_{0}2014.json".format(split)
 # "/home/varun/datasets/MSCOCO/{0}2014".format(split)
 main(args.file, args.root, args.split, arch=args.arch)
