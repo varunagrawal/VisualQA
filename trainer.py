@@ -1,11 +1,14 @@
 import torch
+from torch.nn import utils
 from metrics import accuracy
-import os, os.path as osp
+import os
+import os.path as osp
 
 
 def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     # Set the model to train mode
     model.train()
+
     # enable autograd tracking
     torch.set_grad_enabled(True)
 
@@ -14,14 +17,16 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
 
     for idx, sample in enumerate(dataloader):
         q = sample['question']
-        img = sample["image"]
         lengths = sample['question_len']
+        img = sample["image"]
 
         ans_label = sample['answer_id']
 
         q = q.cuda()
         img = img.cuda()
         ans = ans_label.cuda()
+
+        optimizer.zero_grad()
 
         output = model(img, q, lengths)
 
@@ -31,8 +36,10 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         acc = accuracy(output, ans)
         avg_acc.update(acc.item())
 
-        optimizer.zero_grad()
         loss.backward()
+        # apply gradient clipping
+        utils.clip_grad_value_(model.parameters(), 10)
+
         optimizer.step()
 
         if vis and idx % args.visualize_freq == 0:
@@ -55,17 +62,18 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
 
     for i, sample in enumerate(dataloader):
         q = sample['question']
+        lengths = sample['question_len']
         img = sample["image"]
+
         ans_label = sample['answer_id']
 
         q = q.cuda()
         img = img.cuda()
         ans = ans_label.cuda()
 
-        output = model(img, q)
+        output = model(img, q, lengths)
 
         loss = criterion(output, ans)
-
         avg_loss.update(loss.item(), q.size(0))
 
         acc = accuracy(output, ans)
@@ -104,7 +112,10 @@ def print_state(idx, epoch, size, loss, acc):
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
-        self.reset()
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
 
     def reset(self):
         self.val = 0
@@ -116,4 +127,8 @@ class AverageMeter(object):
         self.val = val
         self.sum += val * n
         self.count += n
-        self.avg = self.sum / self.count
+        # self.avg = self.sum / self.count
+        if self.avg == 0:
+            self.avg = val
+        else:
+            self.avg = 0.95*self.avg + 0.05*val

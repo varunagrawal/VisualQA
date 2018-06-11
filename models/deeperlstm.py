@@ -4,7 +4,7 @@ A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 
 import torch
 from torch import nn
-from torch.nn.utils import rnn
+from torch.nn import utils
 from models import extractor
 
 
@@ -31,11 +31,6 @@ class DeeperLSTM(nn.Module):
 
         self.hidden_dim = hidden_dim
 
-        self.image_embed = nn.Sequential(
-            nn.Linear(image_dim, image_embed_dim),
-            # nn.Dropout(p=0.5),
-            nn.Tanh())
-
         # The question is of the format Batch x T x one-hot vector of size vocab_size
         self.embedding = nn.Sequential(
             nn.Linear(vocab_size, embed_dim),
@@ -46,16 +41,47 @@ class DeeperLSTM(nn.Module):
         self.num_directions = 1
 
         self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers, batch_first=True, dropout=0.5)
-        self.fc = nn.Linear(self.num_rnn_layers * 2 * hidden_dim, rnn_output_dim)  # 2 for hidden + cell
-        self.tanh = nn.Tanh()
+
+        self.image_embed = nn.Sequential(
+            nn.Dropout(p=0.5),
+            nn.Linear(image_dim, image_embed_dim),
+            nn.Tanh())
+
+        self.question_embed = nn.Sequential(
+            nn.Dropout(p=0.5),
+            nn.Linear(self.num_rnn_layers * 2 * hidden_dim, rnn_output_dim),  # 2 for hidden + cell
+            nn.Tanh()
+        )
 
         self.mlp = nn.Sequential(
             nn.Dropout(p=0.5),
             nn.Linear(rnn_output_dim, output_dim),
-            nn.Tanh(),
-            nn.Dropout(p=0.5),
-            nn.Linear(output_dim, output_dim),
+            # nn.Tanh(),
+            # nn.Dropout(p=0.5),
+            # nn.Linear(output_dim, output_dim),
         )
+
+        self.init_weights()
+
+    def init_weights(self):
+        for l in self.embedding:
+            if hasattr(l, 'weight'):
+                nn.init.uniform_(l.weight, -0.08, 0.08)
+
+        nn.init.uniform_(self.rnn.weight_ih_l0, -0.08, 0.08)
+        nn.init.uniform_(self.rnn.weight_hh_l0, -0.08, 0.08)
+
+        for l in self.image_embed:
+            if hasattr(l, 'weight'):
+                nn.init.uniform_(l.weight, -0.08, 0.08)
+
+        for l in self.question_embed:
+            if hasattr(l, 'weight'):
+                nn.init.uniform_(l.weight, -0.08, 0.08)
+
+        for l in self.mlp:
+            if hasattr(l, 'weight'):
+                nn.init.uniform_(l.weight, -0.08, 0.08)
 
     def forward(self, img, ques, q_lens):
         if self.raw_images:
@@ -65,7 +91,6 @@ class DeeperLSTM(nn.Module):
 
         # normalize the image and embed it to the common dimension.
         img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
-        img_features = self.image_embed(img_feat_norm)
 
         q = self.embedding(ques)  # BxTxD
 
@@ -73,23 +98,24 @@ class DeeperLSTM(nn.Module):
         _, sorted_inds = torch.sort(q_lens, descending=True)
         q = q[sorted_inds]
         q_lens = q_lens[sorted_inds]
-        q = rnn.pack_padded_sequence(q, q_lens, batch_first=True)
+        q = utils.rnn.pack_padded_sequence(q, q_lens, batch_first=True)
         
         # ignore outputs as we only need the embedding with dim NxBxD
         _, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
         
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
-        hidden_state, cell =  hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
+        hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
         hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
         # Concatenate the hidden state and the cell state to get the question embedding
         q_embed = torch.cat((hidden_state, cell), dim=1)
 
-        x = self.fc(q_embed)
-        x = self.tanh(x)
+        # map both modalities to common space
+        img_features = self.image_embed(img_feat_norm)
+        ques_feature = self.question_embed(q_embed)
 
         # Fusion
-        x = x.mul(img_features)
+        x = ques_feature * img_features
 
         output = self.mlp(x)
 
