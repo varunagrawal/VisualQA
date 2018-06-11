@@ -25,10 +25,11 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-    vqa_loader = dataset.get_train_dataloader(osp.expanduser(args.annotations),
-                                              osp.expanduser(args.questions),
-                                              args.images, args, raw_images=args.raw_images,
-                                              transforms=transform)
+    vqa_loader = dataset.get_dataloader(osp.expanduser(args.annotations),
+                                        osp.expanduser(args.questions),
+                                        args.images, args, split='train',
+                                        raw_images=args.raw_images,
+                                        transforms=transform)
     # We always use the vocab from the training set
     vocab = vqa_loader.dataset.vocab
 
@@ -45,10 +46,12 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-    val_loader = dataset.get_val_dataloader(osp.expanduser(args.val_annotations),
-                                            osp.expanduser(args.val_questions),
-                                            args.val_images, args, raw_images=args.raw_images,
-                                            maps=maps, vocab=vocab, shuffle=False, transforms=val_transform)
+    val_loader = dataset.get_dataloader(osp.expanduser(args.val_annotations),
+                                        osp.expanduser(args.val_questions),
+                                        args.val_images, args, split='val',
+                                        raw_images=args.raw_images,
+                                        maps=maps, vocab=vocab,
+                                        shuffle=False, transforms=val_transform)
 
     arch = Models[args.arch].value
     model = arch(len(vocab), output_dim=args.top_answer_limit, raw_images=args.raw_images)
@@ -77,7 +80,7 @@ def main():
         scheduler.step()
 
         trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
-        trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
+        # trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
 
     print("Training complete!")
 

@@ -11,21 +11,13 @@ from utils.image import coco_name_format
 from PIL import Image
 
 
-def get_train_dataloader(annotations, questions, images, args, vocab=None, raw_images=False,
-                         transforms=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, "train", args, raw_images=raw_images,
-                                      vocab=vocab, transforms=transforms),
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 shuffle=shuffle)
-
-def get_val_dataloader(annotations, questions, images, args, maps, vocab=None, raw_images=False,
-                       transforms=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, "val", args, raw_images=raw_images,
+def get_dataloader(annotations, questions, images, args, split="train", maps=None, vocab=None, raw_images=False,
+                   transforms=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, split, args, raw_images=raw_images,
                                       vocab=vocab, transforms=transforms, maps=maps),
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 shuffle=shuffle)
+                           batch_size=args.batch_size,
+                           num_workers=args.num_workers,
+                           shuffle=shuffle)
 
 
 class VQADataset(data.Dataset):
@@ -57,10 +49,8 @@ class VQADataset(data.Dataset):
         Process the dataset and load it up.
         We should only do this for the training set.
         """
-        self.data, self.vocab, \
-        self.word_to_wid, self.wid_to_word, \
-        self.ans_to_aid, self.aid_to_ans = process_vqa_dataset(questions, annotations, split, maps,
-                                                               args.top_answer_limit, args.max_length)
+        self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans = \
+            process_vqa_dataset(questions, annotations, split, maps, args.top_answer_limit, args.max_length)
 
     def __len__(self):
         return len(self.data)
@@ -128,9 +118,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
     # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
     if os.path.exists(cache_file):
         print("Found {0} set cache! Loading...".format(split))
-        dataset, vocab, \
-        word_to_wid, wid_to_word, \
-        ans_to_aid, aid_to_ans = pickle.load(open(cache_file, 'rb'))
+        dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans = pickle.load(open(cache_file, 'rb'))
 
     else:
         # load the annotations and questions files
@@ -173,12 +161,12 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
 
         if split == "train":
             vocab = text.get_vocabulary(dataset)
-            word_to_wid = {w:i+1 for i, w in enumerate(vocab)}  # 0 is used for padding
-            wid_to_word = {i+1:w for i, w in enumerate(vocab)}
-            ans_to_aid = {a:i for i, a in enumerate(top_answers)}
-            aid_to_ans = {i:a for i, a in enumerate(top_answers)}
+            word_to_wid = {w: i+1 for i, w in enumerate(vocab)}  # 0 is used for padding
+            wid_to_word = {i+1: w for i, w in enumerate(vocab)}
+            ans_to_aid = {a: i for i, a in enumerate(top_answers)}
+            aid_to_ans = {i: a for i, a in enumerate(top_answers)}
 
-        else: # split == "val":
+        else:  # split == "val":
             vocab = maps["vocab"]
             word_to_wid = maps["word_to_wid"]
             wid_to_word = maps["wid_to_word"]
