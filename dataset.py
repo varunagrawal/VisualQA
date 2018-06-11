@@ -92,11 +92,16 @@ class VQADataset(data.Dataset):
         if self.embed_question:
             item['question'] = torch.from_numpy(d['question_wids'])
         else:
-            one_hot_vec = np.zeros((len(d["question_wids"]), len(self.vocab)))
-            for k in range(len(d["question_wids"])):
-                one_hot_vec[k, d['question_wids'][k]] = 1
-            item['question'] = torch.from_numpy(one_hot_vec).float()
+            # one_hot_vec = np.zeros((len(d["question_wids"]), len(self.vocab)))
+            # for k in range(len(d["question_wids"])):
+            #     one_hot_vec[k, d['question_wids'][k]] = 1
+            # item['question'] = torch.from_numpy(one_hot_vec).float()
+            
+            one_hot_vec = torch.zeros((len(d["question_wids"]), len(self.vocab)))
+            one_hot_vec[torch.arange(one_hot_vec.size(0)).long(), d['question_wids'].astype(np.int64)] = 1
+            item['question'] = one_hot_vec.float()
 
+        item['question_len'] = d['question_length']
         item['answer_id'] = d['answer_id']
         item['answer_type'] = d['answer_type']
 
