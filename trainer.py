@@ -15,13 +15,15 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     for idx, sample in enumerate(dataloader):
         q = sample['question']
         img = sample["image"]
+        lengths = sample['question_len']
+
         ans_label = sample['answer_id']
 
         q = q.cuda()
         img = img.cuda()
         ans = ans_label.cuda()
 
-        output = model(img, q)
+        output = model(img, q, lengths)
 
         loss = criterion(output, ans)
         avg_loss.update(loss.item(), q.size(0))
