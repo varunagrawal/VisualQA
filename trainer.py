@@ -19,7 +19,6 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         q = sample['question']
         lengths = sample['question_len']
         img = sample["image"]
-
         ans_label = sample['answer_id']
 
         q = q.cuda()
