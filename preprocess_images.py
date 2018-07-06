@@ -94,7 +94,6 @@ def main(file, root, split, arch):
             # print(embedding[i].size())
             embeddings[ids[i].item()] = embedding[i].data.cpu()
 
-    exit(0)
     print("Done computing image embeddings")
 
     try:
