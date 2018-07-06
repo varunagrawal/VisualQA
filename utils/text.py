@@ -57,7 +57,7 @@ def remove_tail_words(dataset, vocab, display=True):
     for idx, d in enumerate(tqdm(dataset, leave=display)):
         words = d["question_tokens"]
         question = [w if w in vocab else 'UNK' for w in words]
-        d["question_tokens_UNK"] = question
+        d["question_tokens"] = question
 
     return dataset
 
@@ -75,10 +75,10 @@ def encode_questions(dataset, word_to_wid, max_length=25, display=True):
         print("Encoding the questions")
 
     for idx, d in enumerate(tqdm(dataset, leave=display)):
-        d["question_length"] = min(len(d["question_tokens_UNK"]), max_length)
+        d["question_length"] = min(len(d["question_tokens"]), max_length)
         d["question_wids"] = np.zeros(max_length, dtype=np.uint32)  # 0 -> UNK
 
-        for k, w in enumerate(d["question_tokens_UNK"]):
+        for k, w in enumerate(d["question_tokens"]):
             if k < max_length:
                 wid = word_to_wid.get(w, word_to_wid["UNK"])
                 d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing
