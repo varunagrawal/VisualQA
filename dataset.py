@@ -79,6 +79,8 @@ class VQADataset(data.Dataset):
 
         # Process Question (word token)
         item['question_id'] = d['question_id']
+        item['question_wids'] = d['question_wids'].astype(np.int64)
+
         if self.embed_question:
             item['question'] = torch.from_numpy(d['question_wids'])
         else:
@@ -173,7 +175,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
             ans_to_aid = maps["ans_to_aid"]
             aid_to_ans = maps["aid_to_ans"]
 
-        dataset = text.remove_tail_words(dataset, vocab)
+            dataset = text.remove_tail_words(dataset, vocab)
+
         dataset = text.encode_questions(dataset, word_to_wid, max_length)
         dataset = text.encode_answers(dataset, ans_to_aid)
 
