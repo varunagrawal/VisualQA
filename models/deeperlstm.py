@@ -9,10 +9,9 @@ from models import extractor
 
 
 class DeeperLSTM(nn.Module):
-    def __init__(self, vocab_size, embed_dim=300,
-                 image_dim=4096, image_embed_dim=1024,
-                 hidden_dim=512, rnn_output_dim=1024,
-                 output_dim=1000, raw_images=False):
+    def __init__(self, vocab_size, embed_dim=200, image_dim=4096,
+                 image_embed_dim=1024, hidden_dim=512, rnn_output_dim=1024,
+                 output_dim=1000, batch_first=True, raw_images=False):
         """
 
         :param vocab_size: The number of words in the vocabulary
@@ -22,6 +21,7 @@ class DeeperLSTM(nn.Module):
         :param hidden_dim: The dimensionality of the RNN's hidden state
         :param rnn_output_dim: The RNN output dimensionality
         :param output_dim: The number of answers to output over.
+        :param batch_first: Flag to indicate if the RNN accepts input with batch dim leading.
         """
         super().__init__()
 
@@ -39,8 +39,10 @@ class DeeperLSTM(nn.Module):
 
         self.num_rnn_layers = 2
         self.num_directions = 1
+        self.batch_first = batch_first
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers, batch_first=True, dropout=0.5)
+        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers,
+                           batch_first=self.batch_first, dropout=0.5)
 
         self.image_embed = nn.Sequential(
             nn.Dropout(p=0.5),
@@ -55,7 +57,7 @@ class DeeperLSTM(nn.Module):
 
         self.mlp = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Linear(rnn_output_dim, output_dim),
+            nn.Linear(rnn_output_dim, output_dim)
             # nn.Tanh(),
             # nn.Dropout(p=0.5),
             # nn.Linear(output_dim, output_dim),
@@ -68,8 +70,8 @@ class DeeperLSTM(nn.Module):
             if hasattr(l, 'weight'):
                 nn.init.uniform_(l.weight, -0.08, 0.08)
 
-        nn.init.uniform_(self.rnn.weight_ih_l0, -0.08, 0.08)
-        nn.init.uniform_(self.rnn.weight_hh_l0, -0.08, 0.08)
+        # nn.init.uniform_(self.rnn.weight_ih_l0, -0.08, 0.08)
+        # nn.init.uniform_(self.rnn.weight_hh_l0, -0.08, 0.08)
 
         for l in self.image_embed:
             if hasattr(l, 'weight'):
@@ -92,17 +94,19 @@ class DeeperLSTM(nn.Module):
         # normalize the image and embed it to the common dimension.
         img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
 
+        _, sorted_inds = torch.sort(q_lens, descending=True)
+        ques, q_lens = ques[sorted_inds], q_lens[sorted_inds]
+
         q = self.embedding(ques)  # BxTxD
 
         # Get PackedSequence
-        _, sorted_inds = torch.sort(q_lens, descending=True)
-        q = q[sorted_inds]
-        q_lens = q_lens[sorted_inds]
-        q = utils.rnn.pack_padded_sequence(q, q_lens, batch_first=True)
-        
-        # ignore outputs as we only need the embedding with dim NxBxD
-        _, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
-        
+        # _, sorted_inds = torch.sort(q_lens, descending=True)
+        # q, q_lens = q[sorted_inds], q_lens[sorted_inds]
+        # q = utils.rnn.pack_padded_sequence(q, q_lens, batch_first=self.batch_first)
+
+        output, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
+        # output, lengths = utils.rnn.pad_packed_sequence(output)
+
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
         hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
@@ -112,11 +116,12 @@ class DeeperLSTM(nn.Module):
 
         # map both modalities to common space
         img_features = self.image_embed(img_feat_norm)
-        ques_feature = self.question_embed(q_embed)
+        ques_features = self.question_embed(q_embed)
 
         # Fusion
-        x = ques_feature * img_features
+        x = ques_features * img_features
 
+        # Classification
         output = self.mlp(x)
 
         return output
