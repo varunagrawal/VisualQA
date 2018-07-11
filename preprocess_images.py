@@ -71,17 +71,12 @@ def main(file, root, split, arch):
     data_loader = data.DataLoader(coco, batch_size=16, shuffle=False, num_workers=8)
 
     model, layer = utils.image.get_model(arch)
+
+    model.eval()
+    
     if torch.cuda.is_available():
         model.cuda()
-
-    if split == 'train':
-        model.train()
-    elif split == 'val':
-        model.eval()
-    else:
-        print("Unknown split. Exiting...")
-        exit(0)
-
+    
     embeddings = {}
 
     print("Starting")
