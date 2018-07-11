@@ -13,7 +13,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     torch.set_grad_enabled(True)
 
     avg_loss = AverageMeter()
-    avg_acc = AverageMeter()
+    # avg_acc = AverageMeter()
 
     for idx, sample in enumerate(dataloader):
         q = sample['question']
@@ -32,8 +32,8 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         loss = criterion(output, ans)
         avg_loss.update(loss.item(), q.size(0))
 
-        acc = accuracy(output, ans)
-        avg_acc.update(acc.item())
+        # acc = accuracy(output, ans)
+        # avg_acc.update(acc.item())
 
         loss.backward()
         # apply gradient clipping
@@ -45,9 +45,10 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
             vis.update_loss(loss, epoch, idx, len(dataloader), "loss")
 
         if idx > 0 and idx % args.print_freq == 0:
-            print_state(idx, epoch, len(dataloader), avg_loss.avg, avg_acc.avg)
+            print_state(idx, epoch, len(dataloader), avg_loss.avg)
 
-    save_checkpoint(model, args, epoch)
+    if (epoch+1) % 50 == 0:
+        save_checkpoint(model, args, epoch)
 
 
 def evaluate(model, dataloader, criterion, epoch, args, vis=None):
@@ -57,7 +58,7 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
     torch.set_grad_enabled(False)
 
     avg_loss = AverageMeter()
-    avg_acc = AverageMeter()
+    # avg_acc = AverageMeter()
 
     for i, sample in enumerate(dataloader):
         q = sample['question']
@@ -75,14 +76,14 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
         loss = criterion(output, ans)
         avg_loss.update(loss.item(), q.size(0))
 
-        acc = accuracy(output, ans)
-        avg_acc.update(acc.item())
+        # acc = accuracy(output, ans)
+        # avg_acc.update(acc.item())
 
         if vis and i % args.visualize_freq == 0:
             vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
 
         if i > 0 and i % args.print_freq == 0:
-            print_state(i, -1, len(dataloader), avg_loss.avg, avg_acc.avg)
+            print_state(i, -1, len(dataloader), avg_loss.avg)
 
 
 def save_checkpoint(model, args, epoch):
@@ -97,19 +98,18 @@ def save_checkpoint(model, args, epoch):
     torch.save(state, osp.join(args.save_dir, filename))
 
 
-def print_state(idx, epoch, size, loss, acc):
+def print_state(idx, epoch, size, loss):
     if epoch >= 0:
         message = "Epoch: [{0}][{1}/{2}]\t\t".format(epoch, idx, size)
     else:
         message = "Test: [{0}/{1}]\t\t".format(idx, size)
 
-    print(message +
-          'Loss {loss:.4f} \t'
-          'Accuracy {acc:.4f}'.format(loss=loss, acc=acc))
+    print(message + 'Loss {loss:.4f}'.format(loss=loss))
 
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.val = 0
         self.avg = 0
