@@ -8,7 +8,7 @@ def get_model(arch):
         model.features = torch.nn.DataParallel(model.features)
         modules = list(model.classifier.children())
         # restrict to the FC layer that gives us the 4096 embedding
-        modules = modules[:-3]
+        modules = modules[:-1]
         model.classifier = torch.nn.Sequential(*modules)
         layer = "fc7"
 
