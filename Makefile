@@ -13,7 +13,7 @@ VAL_IMGS=image_embeddings/coco_val_vgg_fc7.pth
 
 IMAGE_ROOT=~/datasets/coco/2014
 ARCH=DeeperLSTM
-BATCH=200
+BATCH=500
 WORKERS=8
 
 main:
@@ -28,7 +28,7 @@ options:
     python main.py -h
 
 evaluate:
-    python evaluate.py ~/datasets/VQA2/v2_mscoco_train2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_train2014_questions.json image_embeddings/coco_train_vgg_fc7.pth ~/datasets/VQA2/v2_mscoco_val2014_annotations.json ~/datasets/VQA2/v2_OpenEnded_mscoco_val2014_questions.json image_embeddings/coco_val_vgg_fc7.pth --resume weights/vqa_checkpoint_DeeperLSTM_149.pth.tar --batch_size 5
+    python evaluate.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) --resume weights/vqa_checkpoint_DeeperLSTM_150.pth --batch_size 100
 
 demo:
     python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN)

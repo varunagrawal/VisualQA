@@ -50,7 +50,8 @@ class VQADataset(data.Dataset):
         We should only do this for the training set.
         """
         self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans = \
-            process_vqa_dataset(questions, annotations, split, maps, args.top_answer_limit, args.max_length)
+            process_vqa_dataset(questions, annotations, split,
+                                maps, args.top_answer_limit, args.max_length)
 
     def __len__(self):
         return len(self.data)
@@ -88,9 +89,11 @@ class VQADataset(data.Dataset):
             # for k in range(len(d["question_wids"])):
             #     one_hot_vec[k, d['question_wids'][k]] = 1
             # item['question'] = torch.from_numpy(one_hot_vec).float()
-            
-            one_hot_vec = torch.zeros((len(d["question_wids"]), len(self.vocab)))
-            one_hot_vec[torch.arange(one_hot_vec.size(0)).long(), d['question_wids'].astype(np.int64)] = 1
+
+            one_hot_vec = torch.zeros(
+                (len(d["question_wids"]), len(self.vocab)))
+            one_hot_vec[torch.arange(one_hot_vec.size(0)).long(
+            ), d['question_wids'].astype(np.int64)] = 1
             item['question'] = one_hot_vec.float()
 
         item['question_len'] = d['question_length']
@@ -100,8 +103,8 @@ class VQADataset(data.Dataset):
         return item
 
 
-def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_answer_limit=1000, max_length=26,
-                        year=2014):
+def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
+                        top_answer_limit=1000, max_length=26, year=2014):
     """
     Process the questions and annotations into a consolidated dataset.
     This is done only for the training set.
@@ -120,7 +123,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
     # Check if preprocessed cache exists. If yes, load it up, else preprocess the data
     if os.path.exists(cache_file):
         print("Found {0} set cache! Loading...".format(split))
-        dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans = pickle.load(open(cache_file, 'rb'))
+        dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans = pickle.load(
+            open(cache_file, 'rb'))
 
     else:
         # load the annotations and questions files
@@ -154,21 +158,25 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None, top_
 
             dataset.append(d)
 
-        # Get the top N answers so we can filter the dataset to only questions with these answers
-        top_answers = text.get_top_answers(dataset, top_answer_limit)
-        dataset = text.filter_dataset(dataset, top_answers)
-
-        # Process the questions
-        dataset = text.preprocess_questions(dataset)
-
         if split == "train":
+            # Get the top N answers so we can filter the dataset to only questions with these answers
+            top_answers = text.get_top_answers(dataset, top_answer_limit)
+            dataset = text.filter_dataset(dataset, top_answers)
+
+            # Process the questions
+            dataset = text.preprocess_questions(dataset)
+
             vocab = text.get_vocabulary(dataset)
-            word_to_wid = {w: i+1 for i, w in enumerate(vocab)}  # 0 is used for padding
+            # 0 is used for padding
+            word_to_wid = {w: i+1 for i, w in enumerate(vocab)}
             wid_to_word = {i+1: w for i, w in enumerate(vocab)}
             ans_to_aid = {a: i for i, a in enumerate(top_answers)}
             aid_to_ans = {i: a for i, a in enumerate(top_answers)}
 
         else:  # split == "val":
+            # Process the questions
+            dataset = text.preprocess_questions(dataset)
+
             vocab = maps["vocab"]
             word_to_wid = maps["word_to_wid"]
             wid_to_word = maps["wid_to_word"]
