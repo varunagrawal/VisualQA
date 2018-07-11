@@ -33,13 +33,13 @@ def parse_args():
 
     parser.add_argument("--arch", default="DeeperLSTM", help="The model to use for VQA",
                         choices=tuple([name for name, _ in Models.__members__.items()]))
-    parser.add_argument("--epochs", default=150, type=int,
+    parser.add_argument("--epochs", default=200, type=int,
                         help="Number of training epochs")
     parser.add_argument("--start_epoch", default=0,
                         type=int, help="Starting epoch")
     parser.add_argument('--lr', "--learning_rate",
                         default=3e-4, type=float, help="Learning rate")
-    parser.add_argument("--lr_decay", default=0.95,
+    parser.add_argument("--lr_decay", default=0.99997592083,
                         type=float, help="The learning rate decay")
     parser.add_argument("--decay_interval", default=1, type=int,
                         help="The epoch step size at which to decay the learning rate")
