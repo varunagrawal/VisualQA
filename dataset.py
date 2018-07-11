@@ -173,6 +173,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
             ans_to_aid = {a: i for i, a in enumerate(top_answers)}
             aid_to_ans = {i: a for i, a in enumerate(top_answers)}
 
+            dataset = text.encode_answers(dataset, ans_to_aid)
+
         else:  # split == "val":
             # Process the questions
             dataset = text.preprocess_questions(dataset)
@@ -186,7 +188,6 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
             dataset = text.remove_tail_words(dataset, vocab)
 
         dataset = text.encode_questions(dataset, word_to_wid, max_length)
-        dataset = text.encode_answers(dataset, ans_to_aid)
 
         print("Caching the processed data")
         pickle.dump([dataset, vocab, word_to_wid, wid_to_word, ans_to_aid, aid_to_ans],

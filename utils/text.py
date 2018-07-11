@@ -111,17 +111,15 @@ def get_top_answers(dataset, top=1000, display=True):
 
 def encode_answers(dataset, ans_to_aid, display=True):
     print("Encoding answers")
-    out_of_scope = len(ans_to_aid) - 1  # the last label is reserved for the rest of the answers
-
-    for idx, d in enumerate(tqdm(dataset, leave=display)):
-        d["answer_id"] = ans_to_aid.get(d['answer'].lower(), out_of_scope)
+    for d in tqdm(dataset, leave=display):
+        d["answer_id"] = ans_to_aid[d['answer'].lower()]
 
     return dataset
 
 
 def filter_dataset(dataset, top_answers, display=True):
     filtered_dataset = []
-    for idx, d in enumerate(tqdm(dataset, leave=display)):
+    for d in tqdm(dataset, leave=display):
         if d["answer"] in top_answers:
             filtered_dataset.append(d)
 

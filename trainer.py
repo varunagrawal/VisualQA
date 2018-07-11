@@ -36,6 +36,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         # avg_acc.update(acc.item())
 
         loss.backward()
+
         # apply gradient clipping
         utils.clip_grad_value_(model.parameters(), 10)
 
