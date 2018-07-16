@@ -100,17 +100,22 @@ class DeeperLSTM(nn.Module):
         q = self.embedding(ques)  # BxTxD
 
         # Get PackedSequence
-        # _, sorted_inds = torch.sort(q_lens, descending=True)
-        # q, q_lens = q[sorted_inds], q_lens[sorted_inds]
-        # q = utils.rnn.pack_padded_sequence(q, q_lens, batch_first=self.batch_first)
+        sorted_q_lens, sorted_inds = torch.sort(q_lens, dim=0, descending=True)
+        _, reverse_sorted_inds = torch.sort(sorted_inds)
+        sorted_q = q.index_select(0, sorted_inds)
+        packed_q = utils.rnn.pack_padded_sequence(sorted_q, lengths=sorted_q_lens, batch_first=self.batch_first)
 
-        output, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
-        # output, lengths = utils.rnn.pad_packed_sequence(output)
+        _, (hidden, cell) = self.rnn(packed_q)  # initial hidden state defaults to 0
 
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
-        hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
+        hidden, cell = hidden.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
+
+        # Get back the original order
+        hidden, cell = hidden.index_select(0, reverse_sorted_inds), cell.index_select(0, reverse_sorted_inds)
+
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
         hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
+        
         # Concatenate the hidden state and the cell state to get the question embedding
         q_embed = torch.cat((hidden_state, cell), dim=1)
 
