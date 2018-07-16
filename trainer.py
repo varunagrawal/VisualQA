@@ -22,6 +22,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         ans_label = sample['answer_id']
 
         q = q.cuda()
+        lengths = lengths.cuda()
         img = img.cuda()
         ans = ans_label.cuda()
 

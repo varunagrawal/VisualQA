@@ -114,10 +114,10 @@ class DeeperLSTM(nn.Module):
         hidden, cell = hidden.index_select(0, reverse_sorted_inds), cell.index_select(0, reverse_sorted_inds)
 
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
-        hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
-        
+        hidden, cell = hidden.view(hidden.size(0), -1), cell.view(cell.size(0), -1)
+
         # Concatenate the hidden state and the cell state to get the question embedding
-        q_embed = torch.cat((hidden_state, cell), dim=1)
+        q_embed = torch.cat((hidden, cell), dim=1)
 
         # map both modalities to common space
         img_features = self.image_embed(img_feat_norm)
