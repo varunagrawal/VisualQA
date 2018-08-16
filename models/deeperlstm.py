@@ -33,15 +33,17 @@ class DeeperLSTM(nn.Module):
 
         # The question is of the format Batch x T x one-hot vector of size vocab_size
         self.embedding = nn.Sequential(
-            nn.Linear(vocab_size, embed_dim),
-            nn.Dropout(p=0.5),
-            nn.Tanh())
+            # nn.Linear(vocab_size, embed_dim),
+            nn.Embedding(vocab_size, embed_dim, padding_idx=0),
+            nn.Dropout(p=0.5))
+            # nn.Tanh())
 
         self.num_rnn_layers = 2
         self.num_directions = 1
         self.batch_first = batch_first
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers,
+        self.rnn = nn.LSTM(embed_dim, hidden_dim,
+                           num_layers=self.num_rnn_layers,
                            batch_first=self.batch_first, dropout=0.5)
 
         self.image_embed = nn.Sequential(
@@ -100,18 +102,18 @@ class DeeperLSTM(nn.Module):
         q = self.embedding(ques)  # BxTxD
 
         # Get PackedSequence
-        sorted_q_lens, sorted_inds = torch.sort(q_lens, dim=0, descending=True)
-        _, reverse_sorted_inds = torch.sort(sorted_inds)
-        sorted_q = q.index_select(0, sorted_inds)
-        packed_q = utils.rnn.pack_padded_sequence(sorted_q, lengths=sorted_q_lens, batch_first=self.batch_first)
+        #sorted_q_lens, sorted_inds = torch.sort(q_lens, dim=0, descending=True)
+        #_, reverse_sorted_inds = torch.sort(sorted_inds)
+        #sorted_q = q.index_select(0, sorted_inds)
+        #q = utils.rnn.pack_padded_sequence(sorted_q, lengths=sorted_q_lens, batch_first=self.batch_first)
 
-        _, (hidden, cell) = self.rnn(packed_q)  # initial hidden state defaults to 0
+        _, (hidden, cell) = self.rnn(q)  # initial hidden state defaults to 0
 
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
         hidden, cell = hidden.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
 
         # Get back the original order
-        hidden, cell = hidden.index_select(0, reverse_sorted_inds), cell.index_select(0, reverse_sorted_inds)
+        #hidden, cell = hidden.index_select(0, reverse_sorted_inds), cell.index_select(0, reverse_sorted_inds)
 
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
         hidden, cell = hidden.view(hidden.size(0), -1), cell.view(cell.size(0), -1)

@@ -82,6 +82,7 @@ class VQADataset(data.Dataset):
         item['question_id'] = d['question_id']
         item['question_wids'] = d['question_wids'].astype(np.int64)
 
+        """
         if self.embed_question:
             item['question'] = torch.from_numpy(d['question_wids'])
         else:
@@ -95,7 +96,9 @@ class VQADataset(data.Dataset):
             one_hot_vec[torch.arange(one_hot_vec.size(0)).long(
             ), d['question_wids'].astype(np.int64)] = 1
             item['question'] = one_hot_vec.float()
-
+        """
+        item['question'] = torch.from_numpy(d['question_wids']).long()
+        # print(item['question'])
         item['question_len'] = d['question_length']
         item['answer_id'] = d['answer_id']
         item['answer_type'] = d['answer_type']
