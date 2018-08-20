@@ -41,7 +41,7 @@ def parse_args():
                         default=3e-4, type=float, help="Learning rate")
     parser.add_argument("--lr_decay", default=0.99997592083,
                         type=float, help="The learning rate decay")
-    parser.add_argument("--decay_interval", default=1, type=int,
+    parser.add_argument("--decay_interval", default=10, type=int,
                         help="The epoch step size at which to decay the learning rate")
     parser.add_argument("--betas", default=(0.8, 0.999), nargs="+", type=float)
     parser.add_argument("--weight-decay", '--wd', default=0.0,
