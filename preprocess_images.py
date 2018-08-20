@@ -52,6 +52,11 @@ def arguments():
 
 
 def main(file, root, split, arch):
+    if torch.cuda.is_available():
+        device = torch.device('cuda:0')
+    else:
+        device = torch.device('cpu')
+
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -68,26 +73,32 @@ def main(file, root, split, arch):
     root = root
 
     coco = COCODataset(coco_dataset_file, root=root, transform=transform, split=split)
-    data_loader = data.DataLoader(coco, batch_size=16, shuffle=False, num_workers=8)
+    data_loader = data.DataLoader(coco, batch_size=1, shuffle=False, num_workers=4)
 
     model, layer = utils.image.get_model(arch)
+    print(arch, layer)
 
-    model.eval()
-    
-    if torch.cuda.is_available():
-        model.cuda()
-    
+    model = model.eval()
+    model = model.to(device)
+
     embeddings = {}
 
     print("Starting")
-    for idx, (img, ids) in enumerate(tqdm(data_loader, total=len(data_loader))):
-        img_var = img.cuda()
-        embedding = model(img_var)
-        for i in range(ids.size(0)):
-            # print(idx, i)
-            # print(ids[i].item())
-            # print(embedding[i].size())
-            embeddings[ids[i].item()] = embedding[i].data.cpu()
+    for idx, (img, idt) in enumerate(tqdm(data_loader, total=len(data_loader))):
+        with torch.no_grad():
+            img = img.to(device)
+            embedding = model(img)
+            # print(embedding.shape, idt.item())
+
+            embeddings[idt.item()] = embedding.cpu()
+            # print(embedding.requires_grad)
+            # break
+
+            # for i in range(ids.size(0)):
+            #     # print(idx, i)
+            #     # print(ids[i].item())
+            #     # print(embedding[i].size())
+            #     embeddings[ids[i].item()] = embedding[i].data.cpu()
 
     print("Done computing image embeddings")
 
