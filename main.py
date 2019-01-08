@@ -60,9 +60,11 @@ def main():
         state = torch.load(args.resume)
         model.load_state_dict(state["model"])
 
-    model.cuda()
+    criterion = nn.CrossEntropyLoss()
 
-    criterion = nn.CrossEntropyLoss().cuda()
+    if torch.cuda.is_available():
+        model = model.cuda()
+        criterion = criterion.cuda()
 
     # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
     optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
