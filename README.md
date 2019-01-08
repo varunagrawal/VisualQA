@@ -28,17 +28,22 @@ Alternatively, you can find them [here](https://1drv.ms/f/s!Au18pri6pxSNlop81AhX
 
 ### Training
 
-To run the training code with default values, just type
+To run the training and evaluation code with default values, just type
 
 ```
 make
+```
+
+If you wish to only run the training code, you can run
+```
+make train
 ```
 
 If you want to use the raw RGB images from COCO, you can type
 ```shell
 make raw_images
 ```
-This takes the same arguments as `make`.
+This takes the same arguments as `make train`.
 
 You can get a list of options with `make options` or `python main.py -h`.
 
