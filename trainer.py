@@ -30,17 +30,15 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         output = model(img, q, lengths)
 
         loss = criterion(output, ans)
-        avg_loss.update(loss.item(), q.size(0))
-
-        # acc = accuracy(output, ans)
-        # avg_acc.update(acc.item())
-
         loss.backward()
 
         # apply gradient clipping
-        utils.clip_grad_value_(model.parameters(), 10)
+        # utils.clip_grad_value_(model.parameters(), 10)
+        utils.clip_grad_norm_(model.parameters(), 0.25)
 
         optimizer.step()
+
+        avg_loss.update(loss.item(), q.size(0))
 
         if vis and idx % args.visualize_freq == 0:
             vis.update_loss(loss, epoch, idx, len(dataloader), "loss")
@@ -55,8 +53,6 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
 def evaluate(model, dataloader, criterion, epoch, args, vis=None):
     # switch to evaluate mode
     model.eval()
-    # disable autograd tracking
-    torch.set_grad_enabled(False)
 
     avg_loss = AverageMeter()
     # avg_acc = AverageMeter()
