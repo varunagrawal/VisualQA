@@ -34,7 +34,7 @@ evaluate:
       --batch_size 1 --resume $(CHECKPOINT) --num_workers ${WORKERS}
 
 demo:
-    python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN)
+    python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN) --checkpoint $(CHECKPOINT)
 
 preprocess:
     python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_train2014.json --root $(IMAGE_ROOT) --split $(split)

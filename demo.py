@@ -13,12 +13,16 @@ def parse_args():
     parser = argparse.ArgumentParser("VQA Demo")
     parser.add_argument("image", help="Path to image file")
     parser.add_argument("question", help="Question text")
-    parser.add_argument("questions", help="Path to VQA Questions training file")
-    parser.add_argument("annotations", help="Path to COCO Annotations training file")
+    parser.add_argument(
+        "questions", help="Path to VQA Questions training file")
+    parser.add_argument(
+        "annotations", help="Path to COCO Annotations training file")
     parser.add_argument("--model", default="DeeperLSTM")
-    parser.add_argument("--weights", default="weights/deeper_lstm_best_weights.pth.tar")
-    parser.add_argument("--preprocessed_cache", default="vqa_train_dataset_cache.pickle")
-    parser.add_argument("--embedding_arch", default="vgg")
+    parser.add_argument(
+        "--checkpoint", default="weights/deeper_lstm_best_weights.pth.tar")
+    parser.add_argument("--preprocessed_cache",
+                        default="vqa_train_dataset_cache.pickle")
+    parser.add_argument("--embedding_arch", default="vgg16")
 
     return parser.parse_args()
 
@@ -47,7 +51,8 @@ def main():
 
     print("Loading encoded data...")
     data, vocab, word_to_wid, wid_to_word, \
-    ans_to_aid, aid_to_ans = process_vqa_dataset(args.questions, args.annotations, "train", maps=None)
+        ans_to_aid, aid_to_ans = process_vqa_dataset(
+            args.questions, args.annotations, "train", maps=None)
 
     # Get VGG model to process the image
     vision_model, _ = image.get_model(args.embedding_arch)
@@ -57,7 +62,7 @@ def main():
     classifier = nn.Softmax(dim=1)
 
     try:
-        weights = torch.load(args.weights)
+        weights = torch.load(args.checkpoint)
     except (Exception,):
         print("ERROR: Default weights missing. Please specify weights for the VQA model")
         exit(0)
@@ -91,25 +96,25 @@ def main():
     print("Processing question")
     q = text.process_single_question(args.question, vocab, word_to_wid)
 
+    q = torch.from_numpy(q['question_wids'])
     # Convert the question to a sequence of 1 hot vectors over the vocab
-    one_hot_vec = np.zeros((len(q["question_wids"]), len(vocab)))
-    for k in range(len(q["question_wids"])):
-        one_hot_vec[k, q['question_wids'][k]] = 1
+    # one_hot_vec = np.zeros((len(q["question_wids"]), len(vocab)))
+    # for k in range(len(q["question_wids"])):
+    #     one_hot_vec[k, q['question_wids'][k]] = 1
 
-    q = torch.from_numpy(one_hot_vec)
+    # q = torch.from_numpy(one_hot_vec)
     if torch.cuda.is_available():
         q = q.cuda()
 
     # Add the batch dimension
-    q = q.unsqueeze(0).float()
+    q = q.unsqueeze(0).long()
 
     # Get the model output and classify for the final value
-    output = model(img_features, q)
+    output = model(img_features, q, torch.LongTensor([q.size(1)]))
     output = classifier(output).data
 
     _, ans_id = torch.max(output, dim=1)
-    # index into ans_id since it is a tensor
-    ans = generate(ans_id[0], aid_to_ans)
+    ans = generate(ans_id.item(), aid_to_ans)
 
     display_result(im, args.question, ans)
 
