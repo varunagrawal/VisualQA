@@ -9,6 +9,13 @@ import os.path as osp
 import numpy as np
 from utils.image import coco_name_format
 from PIL import Image
+import h5py
+
+
+def collate_fn(batch):
+    # Sort batch (list) on question lengths for use in RNN pack_padded_sequence later
+    batch.sort(key=lambda x: x['question_len'], reverse=True)
+    return data.dataloader.default_collate(batch)
 
 
 def get_dataloader(annotations, questions, images, args, split="train", maps=None, vocab=None, raw_images=False,
@@ -82,23 +89,26 @@ class VQADataset(data.Dataset):
         item['question_id'] = d['question_id']
         item['question_wids'] = d['question_wids'].astype(np.int64)
 
-        if self.embed_question:
-            item['question'] = torch.from_numpy(d['question_wids'])
-        else:
-            # one_hot_vec = np.zeros((len(d["question_wids"]), len(self.vocab)))
-            # for k in range(len(d["question_wids"])):
-            #     one_hot_vec[k, d['question_wids'][k]] = 1
-            # item['question'] = torch.from_numpy(one_hot_vec).float()
-
-            one_hot_vec = torch.zeros(
-                (len(d["question_wids"]), len(self.vocab)))
-            one_hot_vec[torch.arange(one_hot_vec.size(0)).long(
-            ), d['question_wids'].astype(np.int64)] = 1
-            item['question'] = one_hot_vec.float()
+        # if self.embed_question:
+        #     item['question'] = torch.from_numpy(d['question_wids'])
+        # else:
+        #     # one_hot_vec = np.zeros((len(d["question_wids"]), len(self.vocab)))
+        #     # for k in range(len(d["question_wids"])):
+        #     #     one_hot_vec[k, d['question_wids'][k]] = 1
+        #     # item['question'] = torch.from_numpy(one_hot_vec).float()
+        #
+        #     one_hot_vec = torch.zeros(
+        #         (len(d["question_wids"]), len(self.vocab)))
+        #     one_hot_vec[torch.arange(one_hot_vec.size(0)).long(
+        #     ), d['question_wids'].astype(np.int64)] = 1
+        #     item['question'] = one_hot_vec.float()
+        item['question'] = torch.from_numpy(d['question_wids']).long()
 
         item['question_len'] = d['question_length']
-        item['answer_id'] = d['answer_id']
         item['answer_type'] = d['answer_type']
+
+        if self.split == "train":
+            item['answer_id'] = d['answer_id']
 
         return item
 
