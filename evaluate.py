@@ -12,7 +12,7 @@ import json
 
 def evaluate(model, dataloader, aid_to_ans):
     # switch to evaluate mode
-    model.eval()
+    model = model.eval()
     # disable autograd tracking
     torch.set_grad_enabled(False)
 
@@ -22,24 +22,25 @@ def evaluate(model, dataloader, aid_to_ans):
         q_id = sample['question_id']
         q = sample['question']
         img = sample["image"]
-        ans_label = sample['answer_id']
         ans_type = sample['answer_type']
         lengths = sample['question_len']
 
         q = q.cuda()
         img = img.cuda()
-        ans_label = ans_label.cuda()
 
         output = model(img, q, lengths)
 
         # this is not needed but we want to be numerically stable
         output = functional.softmax(output, dim=1)
 
-        ans = torch.max(output, dim=1)[1]
+        ans = torch.max(output.cpu(), dim=1)[1]
 
-        for idx in range(ans.size(0)):
-            results.append(
-                {'question_id': q_id[idx].item(), 'answer': aid_to_ans[ans[idx].item()]})
+        results.append(
+            {
+                'question_id': q_id.item(),
+                'answer': aid_to_ans[ans.item()]
+            }
+        )
 
     return results
 
@@ -86,7 +87,7 @@ def main():
             "No trained model weights provided. Don't expect the answers to be meaningful.")
 
     if torch.cuda.is_available():
-        model.cuda()
+        model = model.cuda()
 
     with torch.no_grad():
         results = evaluate(model, val_loader, maps["aid_to_ans"])
