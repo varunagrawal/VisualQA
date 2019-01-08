@@ -4,7 +4,7 @@ from utils.image import get_model
 
 
 class FeatureExtractor(nn.Module):
-    def __init__(self, arch="vgg16"):
+    def __init__(self, arch="vgg19_bn"):
         super().__init__()
         self.model, _ = get_model(arch)
 

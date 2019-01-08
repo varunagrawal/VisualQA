@@ -1,5 +1,5 @@
 """
-A Deeper LSTM Q model as detailed in the VQA paper by Agrawal et. al.
+A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 """
 
 import torch
@@ -8,7 +8,7 @@ from torch.nn import utils
 from models import extractor
 
 
-class DeeperLSTM(nn.Module):
+class CNN_LSTM(nn.Module):
     def __init__(self, vocab_size, embed_dim=300, image_dim=4096,
                  image_embed_dim=1024, hidden_dim=512, rnn_output_dim=1024,
                  output_dim=1000, batch_first=True, raw_images=False):
@@ -40,7 +40,7 @@ class DeeperLSTM(nn.Module):
             nn.Dropout(p=0.5),
             nn.Tanh())
 
-        self.num_rnn_layers = 2
+        self.num_rnn_layers = 1
         self.num_directions = 1
         self.batch_first = batch_first
         self.hidden_dim = hidden_dim
@@ -103,6 +103,9 @@ class DeeperLSTM(nn.Module):
 
         q = self.embedding(ques)  # BxTxD
 
+        # h0 = (torch.zeros(self.num_rnn_layers, q.shape[0], self.hidden_dim).cuda(),
+        #       torch.zeros(self.num_rnn_layers, q.shape[0], self.hidden_dim).cuda())
+
         # initial hidden state defaults to 0
         output, (hidden_state, cell) = self.rnn(q)
 
@@ -112,6 +115,7 @@ class DeeperLSTM(nn.Module):
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
         hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), \
             cell.view(cell.size(0), -1)
+
         # Concatenate the hidden state and the cell state to get the question embedding
         q_embed = torch.cat((hidden_state, cell), dim=1)
 
