@@ -5,6 +5,7 @@ import os
 import os.path as osp
 
 
+@torch.enable_grad()
 def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
     # Set the model to train mode
     model.train()

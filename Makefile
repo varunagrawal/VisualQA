@@ -13,12 +13,14 @@ VAL_IMGS=image_embeddings/coco_val_vgg_fc7.pth
 
 IMAGE_ROOT=~/datasets/coco
 ARCH=DeeperLSTM
-BATCH=200
+BATCH=512
 WORKERS=8
 
 CHECKPOINT=weights/vqa_checkpoint_DeeperLSTM_199.pth
 
-main:
+main: train evaluate
+
+train:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
     --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT)
 

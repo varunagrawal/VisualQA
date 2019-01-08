@@ -95,6 +95,8 @@ def main():
     with open("VQA_OpenEnded_MSCOCO_results.json", 'w') as r:
         json.dump(results, r)
 
+    print("Results saved!")
+
 
 if __name__ == "__main__":
     main()
