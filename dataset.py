@@ -177,6 +177,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
             dataset = text.preprocess_questions(dataset)
 
             vocab = text.get_vocabulary(dataset)
+
             # 0 is used for padding
             word_to_wid = {w: i+1 for i, w in enumerate(vocab)}
             wid_to_word = {i+1: w for i, w in enumerate(vocab)}
@@ -190,6 +191,7 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
             dataset = text.preprocess_questions(dataset)
 
             vocab = maps["vocab"]
+
             word_to_wid = maps["word_to_wid"]
             wid_to_word = maps["wid_to_word"]
             ans_to_aid = maps["ans_to_aid"]

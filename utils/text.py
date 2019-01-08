@@ -13,7 +13,7 @@ import nltk
 def tokenize(sentence):
     sentence = sentence.lower()
     return [i for i in re.split(r"([-.\"',:? !\$#@~()*&\^%;\[\]/\\\+<>\n=])", sentence) if
-            i != '' and i != ' ' and i != '\n'];
+            i != '' and i != ' ' and i != '\n']
 
 
 def preprocess_questions(dataset, method="nltk", display=True):
@@ -81,7 +81,8 @@ def encode_questions(dataset, word_to_wid, max_length=25, display=True):
         for k, w in enumerate(d["question_tokens"]):
             if k < max_length:
                 wid = word_to_wid.get(w, word_to_wid["UNK"])
-                d["question_wids"][k] = int(wid)  # ensure it is an int so it can be used for indexing
+                # ensure it is an int so it can be used for indexing
+                d["question_wids"][k] = int(wid)
 
     return dataset
 
@@ -96,7 +97,8 @@ def get_top_answers(dataset, top=1000, display=True):
     print("{0} unqiue answers".format(len(counts)))
 
     # Get a list of answers sorted by how common they are
-    ans_counts = sorted([(count, ans) for ans, count in counts.items()], reverse=True)
+    ans_counts = sorted([(count, ans)
+                         for ans, count in counts.items()], reverse=True)
     top_answers = []
 
     for i in range(top):
@@ -129,8 +131,9 @@ def filter_dataset(dataset, top_answers, display=True):
 
 
 def process_single_question(question, vocab, word_to_wid, max_length=25):
-    d = [{ "question": question }]
+    d = [{"question": question}]
     d = preprocess_questions(d, display=False)
     d = remove_tail_words(d, vocab, display=False)
-    encoded_question = encode_questions(d, word_to_wid, max_length, display=False)
+    encoded_question = encode_questions(d, word_to_wid,
+                                        max_length, display=False)
     return encoded_question[0]
