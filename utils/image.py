@@ -4,7 +4,16 @@ from torchvision import models
 
 def get_model(arch):
     if arch == 'vgg16':
-        model = models.vgg16(pretrained=True)
+        model = models.vgg16_bn(pretrained=True)
+        model.features = torch.nn.DataParallel(model.features)
+        modules = list(model.classifier.children())
+        # restrict to the FC layer that gives us the 4096 embedding
+        modules = modules[:-1]
+        model.classifier = torch.nn.Sequential(*modules)
+        layer = "fc7"
+
+    if arch == 'vgg19':
+        model = models.vgg19_bn(pretrained=True)
         model.features = torch.nn.DataParallel(model.features)
         modules = list(model.classifier.children())
         # restrict to the FC layer that gives us the 4096 embedding
