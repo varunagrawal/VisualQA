@@ -9,7 +9,7 @@ from models import extractor
 
 
 class DeeperLSTM(nn.Module):
-    def __init__(self, vocab_size, embed_dim=200, image_dim=4096,
+    def __init__(self, vocab_size, embed_dim=300, image_dim=4096,
                  image_embed_dim=1024, hidden_dim=512, rnn_output_dim=1024,
                  output_dim=1000, batch_first=True, raw_images=False):
         """
@@ -27,40 +27,50 @@ class DeeperLSTM(nn.Module):
 
         self.raw_images = raw_images
         if raw_images:
-            self.feature_extractor = extractor.FeatureExtractor("vgg16")  # base model uses VGG16
+            # base model uses VGG16
+            self.feature_extractor = extractor.FeatureExtractor("vgg16")
 
         self.hidden_dim = hidden_dim
 
-        # The question is of the format Batch x T x one-hot vector of size vocab_size
+        # add 1 to account for padding value
+        vocab_size = vocab_size + 1
+
+        # # The question is of the format Batch x T x one-hot vector of size vocab_size
+        # self.embedding = nn.Sequential(
+        #     nn.Linear(vocab_size, embed_dim),
+        #     nn.Dropout(p=0.5),
+        #     nn.Tanh())
         self.embedding = nn.Sequential(
-            nn.Linear(vocab_size, embed_dim),
+            nn.Embedding(vocab_size, embed_dim, padding_idx=0),
             nn.Dropout(p=0.5),
             nn.Tanh())
 
-        self.num_rnn_layers = 2
+        self.num_rnn_layers = 1
         self.num_directions = 1
         self.batch_first = batch_first
+        self.hidden_dim = hidden_dim
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim, num_layers=self.num_rnn_layers,
-                           batch_first=self.batch_first, dropout=0.5)
+        self.rnn = nn.LSTM(embed_dim, hidden_dim,
+                           num_layers=self.num_rnn_layers,
+                           batch_first=self.batch_first)
 
         self.image_embed = nn.Sequential(
-            nn.Dropout(p=0.5),
+            # nn.Dropout(p=0.5),
             nn.Linear(image_dim, image_embed_dim),
             nn.Tanh())
 
         self.question_embed = nn.Sequential(
-            nn.Dropout(p=0.5),
-            nn.Linear(self.num_rnn_layers * 2 * hidden_dim, rnn_output_dim),  # 2 for hidden + cell
+            # nn.Dropout(p=0.5),
+            nn.Linear(self.num_rnn_layers * 2 * hidden_dim,
+                      rnn_output_dim),  # 2 for hidden + cell
             nn.Tanh()
         )
 
         self.mlp = nn.Sequential(
+            nn.Linear(rnn_output_dim, output_dim),
+            nn.Tanh(),
             nn.Dropout(p=0.5),
-            nn.Linear(rnn_output_dim, output_dim)
-            # nn.Tanh(),
-            # nn.Dropout(p=0.5),
-            # nn.Linear(output_dim, output_dim),
+            nn.Linear(output_dim, output_dim)
         )
 
         self.init_weights()
@@ -92,25 +102,29 @@ class DeeperLSTM(nn.Module):
             img_feat = img
 
         # normalize the image and embed it to the common dimension.
-        img_feat_norm = img_feat / torch.norm(img_feat, p=2).detach()
-
-        _, sorted_inds = torch.sort(q_lens, descending=True)
-        ques, q_lens = ques[sorted_inds], q_lens[sorted_inds]
+        norm = img_feat.norm(p=2, dim=1, keepdim=True).expand_as(img_feat)
+        img_feat_norm = img_feat / norm.detach()
 
         q = self.embedding(ques)  # BxTxD
 
+        # h0 = (torch.zeros(self.num_rnn_layers, q.shape[0], self.hidden_dim).cuda(),
+        #       torch.zeros(self.num_rnn_layers, q.shape[0], self.hidden_dim).cuda())
+
         # Get PackedSequence
-        # _, sorted_inds = torch.sort(q_lens, descending=True)
-        # q, q_lens = q[sorted_inds], q_lens[sorted_inds]
         # q = utils.rnn.pack_padded_sequence(q, q_lens, batch_first=self.batch_first)
 
-        output, (hidden_state, cell) = self.rnn(q)  # initial hidden state defaults to 0
-        # output, lengths = utils.rnn.pad_packed_sequence(output)
+        # initial hidden state defaults to 0
+        output, (hidden_state, cell) = self.rnn(q)
+
+        # hidden_state = hidden_state.data
+        # cell = cell.data
 
         # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
-        hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), cell.transpose(0, 1).contiguous()
+        hidden_state, cell = hidden_state.transpose(
+            0, 1).contiguous(), cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
-        hidden_state, cell = hidden_state.view(hidden_state.size(0), -1), cell.view(cell.size(0), -1)
+        hidden_state, cell = hidden_state.view(
+            hidden_state.size(0), -1), cell.view(cell.size(0), -1)
         # Concatenate the hidden state and the cell state to get the question embedding
         q_embed = torch.cat((hidden_state, cell), dim=1)
 
