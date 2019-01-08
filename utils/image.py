@@ -3,7 +3,7 @@ from torchvision import models
 
 
 def get_model(arch):
-    if arch == 'vgg16':
+    if arch == 'vgg16_bn':
         model = models.vgg16_bn(pretrained=True)
         model.features = torch.nn.DataParallel(model.features)
         modules = list(model.classifier.children())
@@ -12,7 +12,7 @@ def get_model(arch):
         model.classifier = torch.nn.Sequential(*modules)
         layer = "fc7"
 
-    if arch == 'vgg19':
+    if arch == 'vgg19_bn':
         model = models.vgg19_bn(pretrained=True)
         model.features = torch.nn.DataParallel(model.features)
         modules = list(model.classifier.children())

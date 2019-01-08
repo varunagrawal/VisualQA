@@ -27,8 +27,10 @@ class COCODataset(data.Dataset):
 
     def __getitem__(self, index):
         item = self.data[index]
-        
-        img = Image.open(osp.join(self.root, "{0}2014".format(self.split), item["file_name"]))
+
+        img = Image.open(osp.join(self.root,
+                                  "{0}2014".format(self.split),
+                                  item["file_name"]))
         img = img.convert(mode='RGB')
 
         # convert to Tensor so we can batch it
@@ -41,17 +43,21 @@ class COCODataset(data.Dataset):
 
 
 def arguments():
-    parser = argparse.ArgumentParser("Standalone utility to preprocess COCO images")
+    parser = argparse.ArgumentParser(
+        "Standalone utility to preprocess COCO images")
 
     parser.add_argument("file", help="Path to COCO annotations file")
-    parser.add_argument("--arch", default="vgg16", choices=("vgg16", "resnet152"))
-    parser.add_argument("--root", help="Path to the train/val root directory of images")
-    parser.add_argument("--split", default="train", choices=("train", "val"))
+    parser.add_argument("--arch", default="vgg19_bn",
+                        choices=("vgg19_bn", "vgg16_bn", "resnet152"))
+    parser.add_argument("--root",
+                        help="Path to the train/val root directory of images")
+    parser.add_argument("--split",
+                        default="train", choices=("train", "val"))
 
     return parser.parse_args()
 
 
-def main(file, root, split, arch):
+def main(coco_dataset_file, root, split, arch):
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     else:
@@ -61,22 +67,17 @@ def main(file, root, split, arch):
                                      std=[0.229, 0.224, 0.225])
 
     transform = transforms.Compose([
-            # transforms.Resize(256),
-            # transforms.RandomResizedCrop(224),
-            # transforms.RandomHorizontalFlip(),
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            normalize,
-        ])
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        normalize,
+    ])
 
-    coco_dataset_file = file
-    root = root
-
-    coco = COCODataset(coco_dataset_file, root=root, transform=transform, split=split)
-    data_loader = data.DataLoader(coco, batch_size=1, shuffle=False, num_workers=4)
+    data_loader = data.DataLoader(COCODataset(coco_dataset_file, root=root,
+                                              transform=transform, split=split),
+                                  batch_size=1, shuffle=False, num_workers=4)
 
     model, layer = utils.image.get_model(arch)
-    print(arch, layer)
+    print("Conv Net Model", arch, layer)
 
     model = model.eval()
     model = model.to(device)
@@ -84,21 +85,12 @@ def main(file, root, split, arch):
     embeddings = {}
 
     print("Starting")
-    for idx, (img, idt) in enumerate(tqdm(data_loader, total=len(data_loader))):
-        with torch.no_grad():
+    with torch.no_grad():
+
+        for idx, (img, idt) in enumerate(tqdm(data_loader, total=len(data_loader))):
             img = img.to(device)
             embedding = model(img)
-            # print(embedding.shape, idt.item())
-
             embeddings[idt.item()] = embedding.cpu()
-            # print(embedding.requires_grad)
-            # break
-
-            # for i in range(ids.size(0)):
-            #     # print(idx, i)
-            #     # print(ids[i].item())
-            #     # print(embedding[i].size())
-            #     embeddings[ids[i].item()] = embedding[i].data.cpu()
 
     print("Done computing image embeddings")
 
@@ -112,6 +104,4 @@ def main(file, root, split, arch):
 
 
 args = arguments()
-# "/home/varun/datasets/MSCOCO/annotations/instances_{0}2014.json".format(split)
-# "/home/varun/datasets/MSCOCO/{0}2014".format(split)
 main(args.file, args.root, args.split, arch=args.arch)
