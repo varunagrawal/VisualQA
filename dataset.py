@@ -24,7 +24,8 @@ def get_dataloader(annotations, questions, images, args, split="train", maps=Non
                                       vocab=vocab, transforms=transforms, maps=maps),
                            batch_size=args.batch_size,
                            num_workers=args.num_workers,
-                           shuffle=shuffle)
+                           shuffle=shuffle,
+                           collate_fn=collate_fn)
 
 
 class VQADataset(data.Dataset):
