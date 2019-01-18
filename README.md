@@ -87,3 +87,17 @@ You can use your own image or question:
 ```shell
 python demo.py demo_img.jpg "what room is this?"
 ```
+
+
+## Results
+
+**NOTE** We train and evaluate on the balanced datasets.
+
+The `DeeperLSTM` model in this repo achieves the following results:
+
+    Overall Accuracy is: 49.15
+
+    Per Answer Type Accuracy is the following:
+    other : 38.12
+    yes/no : 69.55
+    number : 32.17
