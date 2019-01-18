@@ -92,10 +92,10 @@ def main():
     with torch.no_grad():
         results = evaluate(model, val_loader, maps["aid_to_ans"])
 
-    with open("VQA_OpenEnded_MSCOCO_results.json", 'w') as r:
+    with open(args.results_file, 'w') as r:
         json.dump(results, r)
 
-    print("Results saved!")
+    print("Results saved to {0}".format(args.results_file))
 
 
 if __name__ == "__main__":
