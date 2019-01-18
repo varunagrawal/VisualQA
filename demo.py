@@ -22,7 +22,7 @@ def parse_args():
         "--checkpoint", default="weights/deeper_lstm_best_weights.pth.tar")
     parser.add_argument("--preprocessed_cache",
                         default="vqa_train_dataset_cache.pickle")
-    parser.add_argument("--embedding_arch", default="vgg16")
+    parser.add_argument("--embedding_arch", default="vgg19_bn")
 
     return parser.parse_args()
 
