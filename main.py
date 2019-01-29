@@ -18,9 +18,8 @@ def main():
     torch.cuda.set_device(args.gpu)
 
     transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
+        transforms.Resize((args.img_size, args.img_size)),
+        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])

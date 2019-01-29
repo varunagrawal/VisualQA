@@ -20,6 +20,7 @@ def parse_args():
                         help="The file containing either the tensors of the CNN embeddings or the json file of COCO images")
     parser.add_argument("--image_root",
                         help="Root path to the images directory")
+
     parser.add_argument("--raw_images", action="store_true", default=False,
                         help="Flag to indicate if we're using the the raw images instead of the preprocessed embeddings")
     parser.add_argument("--embed_question", action="store_true",
@@ -28,6 +29,8 @@ def parse_args():
                         help="The number of answers to consider as viable options")
     parser.add_argument("--max_length", default=26, type=int,
                         help="The maximum length to consider to each question")
+    parser.add_argument("--img_size", default=224, type=int,
+                        help="The size of the image to pass to the CNN")
 
     parser.add_argument("--arch", default="DeeperLSTM", help="The model to use for VQA",
                         choices=tuple([name for name, _ in Models.__members__.items()]))
