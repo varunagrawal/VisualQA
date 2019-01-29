@@ -24,6 +24,11 @@ train:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
     --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT)
 
+train_mcb:
+    python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
+    --arch MCBModel --batch_size 64 --num_workers ${WORKERS} --image_root $(IMAGE_ROOT) --raw_images --img_size 448
+
+
 raw_images:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) \
     --raw_images --image_root $(IMAGE_ROOT) --arch $(ARCH) --batch_size 32
