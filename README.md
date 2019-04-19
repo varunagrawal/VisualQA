@@ -5,9 +5,7 @@ Visual Question Answering in PyTorch
 
 ## Setup
 
-We use Pipenv since it is the Python recommended way of managing dependencies.
-
-- Create your virtual environment and install all your dependencies with `pipenv install` in the project root directory.
+- Run `pip install -r requirements.txt` to install all the required python packages.
 - Download the VQA (2.0) dataset from [visualqa.org](http://visualqa.org/)
 
 ## Preprocess Images
