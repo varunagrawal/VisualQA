@@ -101,6 +101,10 @@ def get_top_answers(dataset, top=1000, display=True):
                          for ans, count in counts.items()], reverse=True)
     top_answers = []
 
+    # If `top` is negative, we use all answers
+    if top <= 0:
+        top len(counts)
+
     for i in range(top):
         top_answers.append(ans_counts[i][1])
 
