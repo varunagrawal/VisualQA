@@ -16,8 +16,8 @@ python preprocess_images.py <path to instances_train2014.json> \
     --root <path to dataset root "train2014|val2014"> \
     --split <train|val> --arch <vgg|resnet152>
 ```
-I have already pre-processed all the COCO images (both train and test sets) using the VGG-16 and ResNet-152 models. To download them, please go into the `image_embeddings` directory and run `make <model>`.</br>
-Here `<model>` can be either `vgg` or `resnet` depending on which model's embeddings you need. E.g. `make vgg`
+I have already pre-processed all the COCO images (both train and test sets) using the VGG-16, VGG-19-BN, and ResNet-152 models. To download them, please go into the `image_embeddings` directory and run `make <model>`.</br>
+Here `<model>` can be either `vgg16`, `vgg19_bn` or `resnet152` depending on which model's embeddings you need. E.g. `make resnet152`
 
 Alternatively, you can find them [here](https://1drv.ms/f/s!Au18pri6pxSNlop81AhX4bATqy1VJA).
 
