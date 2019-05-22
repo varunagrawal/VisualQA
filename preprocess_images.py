@@ -80,7 +80,7 @@ def main(coco_dataset_file, root, split, arch, gpu):
                                   batch_size=1, shuffle=False, num_workers=4)
 
     model, layer = utils.image.get_model(arch)
-    print("Conv Net Model", arch, layer)
+    print("ConvNet Model", arch, layer)
 
     model = model.eval().to(device)
 

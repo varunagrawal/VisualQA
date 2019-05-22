@@ -1,11 +1,15 @@
 .RECIPEPREFIX +=
 
 
-vgg:
-    wget "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361854&authkey=APMgqT4vLOkSEtY" -O "coco_val_vgg_fc7.pth";
-    wget "https://onedrive.live.com/embed?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361856&authkey=ACxmPUfJB15L02k" -O "coco_train_vgg_fc7.pth";
+vgg16:
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21364924&authkey=AJzdq7TLwxSIoe4" -O "coco_train_vgg16_fc7.pth";
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21364925&authkey=AAefrzCFKniSxwY" -O "coco_val_vgg16_fc7.pth";
 
-resnet:
-    wget "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361855&authkey=AHdY1TwG0xwem1A" -O "coco_train_resnet152_pool5.pth";
-    wget "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361855&authkey=AHdY1TwG0xwem1A" -O "coco_val_resnet152_pool5.pth";
+vgg19_bn:
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21364923&authkey=ABOahsDHSYdBR6E" -O "coco_train_vgg19_bn_fc7.pth";
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21364922&authkey=ADOPHUsMBGGBxM4" -O "coco_val_vgg19_bn_fc7.pth";
+
+resnet152:
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361855&authkey=AHdY1TwG0xwem1A" -O "coco_train_resnet152_pool5.pth";
+    wget --no-check-certificate "https://onedrive.live.com/download?cid=8D14A7BAB8A67CED&resid=8D14A7BAB8A67CED%21361853&authkey=AKFetWHizfFh7lg" -O "coco_val_resnet152_pool5.pth";
     
