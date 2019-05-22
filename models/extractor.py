@@ -8,9 +8,6 @@ class FeatureExtractor(nn.Module):
         super().__init__()
         self.model, _ = get_model(arch)
 
-        if torch.cuda.is_available():
-            self.model = self.model.cuda()
-
         self.model = self.model.eval()
 
     def forward(self, x):

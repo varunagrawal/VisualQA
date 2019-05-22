@@ -1,20 +1,20 @@
-import torch
-from torch.nn import utils
-from metrics import accuracy
 import os
 import os.path as osp
 
+import torch
+from torch.nn import utils
 
-@torch.enable_grad()
-def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
+from metrics import accuracy
+
+
+def train(model, dataloader, criterion, optimizer, epoch, args, device, vis=None):
     # Set the model to train mode
-    model.train()
+    model = model.train()
 
     # enable autograd tracking
     torch.set_grad_enabled(True)
 
     avg_loss = AverageMeter()
-    # avg_acc = AverageMeter()
 
     for idx, sample in enumerate(dataloader):
         q = sample['question']
@@ -22,9 +22,9 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         img = sample["image"]
         ans_label = sample['answer_id']
 
-        q = q.cuda()
-        img = img.cuda()
-        ans = ans_label.cuda()
+        q = q.to(device)
+        img = img.to(device)
+        ans = ans_label.to(device)
 
         optimizer.zero_grad()
 
@@ -51,12 +51,14 @@ def train(model, dataloader, criterion, optimizer, epoch, args, vis=None):
         save_checkpoint(model, args, epoch)
 
 
-def evaluate(model, dataloader, criterion, epoch, args, vis=None):
+@torch.no_grad()
+def evaluate(model, dataloader, criterion, epoch, args, device, vis=None):
+    """Run model on validation set."""
     # switch to evaluate mode
-    model.eval()
+    model = model.eval()
 
     avg_loss = AverageMeter()
-    # avg_acc = AverageMeter()
+    acc = 0.0
 
     for i, sample in enumerate(dataloader):
         q = sample['question']
@@ -65,23 +67,24 @@ def evaluate(model, dataloader, criterion, epoch, args, vis=None):
 
         ans_label = sample['answer_id']
 
-        q = q.cuda()
-        img = img.cuda()
-        ans = ans_label.cuda()
+        q = q.to(device)
+        img = img.to(device)
+        ans = ans_label.to(device)
 
         output = model(img, q, lengths)
 
         loss = criterion(output, ans)
         avg_loss.update(loss.item(), q.size(0))
 
-        # acc = accuracy(output, ans)
-        # avg_acc.update(acc.item())
+        acc += accuracy(output, ans)
 
         if vis and i % args.visualize_freq == 0:
             vis.update_loss(loss, epoch, i, len(dataloader), "val_loss")
 
         if i > 0 and i % args.print_freq == 0:
             print_state(i, -1, len(dataloader), avg_loss.avg)
+
+    return acc
 
 
 def save_checkpoint(model, args, epoch):

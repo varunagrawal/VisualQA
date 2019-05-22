@@ -3,10 +3,10 @@ Implementation of MultiLinear Compact Bilinear Pooling model
 [https://arxiv.org/pdf/1606.01847.pdf]
 """
 
-import numpy as np
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
+
 from models import extractor
 
 
@@ -25,13 +25,13 @@ class MulitmodalCompactBilinearPool(nn.Module):
             # C tensor performs the mapping of the h vector and stores the s vector values as well
             C = torch.zeros(original_dim, projection_dim)
             for i in range(original_dim):
-                C[i, np.random.randint(0, projection_dim-1)] = 2 * \
-                    np.random.randint(0, 2) - 1  # s values
-
-                if torch.cuda.is_available():
-                    C = C.cuda()
+                C[i, torch.randint(0, projection_dim-1)] = 2 * torch.randint(0, 2) - 1  # s values
 
             self.C.append(C)
+
+    def to(self, device):
+        for i in range(len(self.C)):
+            self.C[i].to(device)
 
     def forward(self, *x):
         feature_size = x[0].size()
@@ -147,6 +147,7 @@ class MCBModel(nn.Module):
 
         # signed square root
         y = torch.sqrt(F.relu(x)) - torch.sqrt(F.relu(-x))
+
         # L2 normalization
         y = y / torch.norm(y, p=2).detach()
         y = self.classification(y)

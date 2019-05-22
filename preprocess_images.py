@@ -7,8 +7,8 @@ import json
 import os
 import os.path as osp
 
-import torch
 from PIL import Image
+import torch
 from torch.utils import data
 from torchvision import transforms
 from tqdm import tqdm

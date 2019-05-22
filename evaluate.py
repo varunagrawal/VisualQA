@@ -11,9 +11,9 @@ import json
 
 
 @torch.no_grad()
-def evaluate(model, dataloader, aid_to_ans):
-    # switch to evaluate mode
-    model = model.eval()
+def evaluate(model, dataloader, aid_to_ans, device):
+    # move to device and switch to evaluate mode
+    model = model.to(device).eval()
 
     results = []
 
@@ -24,8 +24,8 @@ def evaluate(model, dataloader, aid_to_ans):
         ans_type = sample['answer_type']
         lengths = sample['question_len']
 
-        q = q.cuda()
-        img = img.cuda()
+        q = q.to(device)
+        img = img.to(device)
 
         output = model(img, q, lengths)
 
@@ -89,9 +89,11 @@ def main():
         print("No trained model weights provided. Don't expect the answers to be meaningful.")
 
     if torch.cuda.is_available():
-        model = model.cuda()
+        device = torch.device('cuda:{0}'.format(args.gpu))
+    else:
+        device = torch.device('cpu')
 
-    results = evaluate(model, val_loader, maps["aid_to_ans"])
+    results = evaluate(model, val_loader, maps["aid_to_ans"], device)
 
     with open(args.results_file, 'w') as r:
         json.dump(results, r)

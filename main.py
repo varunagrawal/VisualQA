@@ -15,8 +15,10 @@ from models.model import Models
 def main():
     args = parse_args()
 
-    # Set the GPU to use
-    torch.cuda.set_device(args.gpu)
+    if torch.cuda.is_available():
+        device = torch.device('cuda:{0}'.format(args.gpu))
+    else:
+        device = torch.device('cpu')
 
     transform = transforms.Compose([
         transforms.Resize((args.img_size, args.img_size)),
@@ -62,9 +64,8 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
 
-    if torch.cuda.is_available():
-        model = model.cuda()
-        criterion = criterion.cuda()
+    model = model.to(device)
+    criterion = criterion.to(device)
 
     # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
     optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
@@ -81,8 +82,8 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
 
-        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, vis=vis)
-        # trainer.evaluate(model, val_loader, criterion, epoch, args, vis=vis)
+        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, device, vis=vis)
+        # trainer.evaluate(model, val_loader, criterion, epoch, args, device, vis=vis)
 
     print("Training complete!")
 

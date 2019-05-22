@@ -4,14 +4,13 @@ A baseline CNN + LSTM model as detailed in the VQA paper by Agrawal et. al.
 
 import torch
 from torch import nn
-from torch.nn import utils
 from models import extractor
 
 
 class CNN_LSTM(nn.Module):
     def __init__(self, vocab_size, embed_dim=300, image_dim=4096,
                  image_embed_dim=1024, hidden_dim=512, rnn_output_dim=1024,
-                 output_dim=1000, batch_first=True, raw_images=False):
+                 output_dim=1000, batch_first=True, raw_images=False, extractor_arch="vgg19_bn"):
         """
 
         :param vocab_size: The number of words in the vocabulary
@@ -22,13 +21,16 @@ class CNN_LSTM(nn.Module):
         :param rnn_output_dim: The RNN output dimensionality
         :param output_dim: The number of answers to output over.
         :param batch_first: Flag to indicate if the RNN accepts input with batch dim leading.
+        :param raw_images: Flag to indicate if we're working with raw image data or no.
+        :param extractor_arch: If using raw images, string indicating the
+         feature extractor architecture to use
         """
         super().__init__()
 
         self.raw_images = raw_images
         if raw_images:
-            # base model uses VGG19
-            self.feature_extractor = extractor.FeatureExtractor("vgg19_bn")
+            # default base model uses VGG19 with BatchNorm
+            self.feature_extractor = extractor.FeatureExtractor(extractor_arch)
 
         self.hidden_dim = hidden_dim
 

@@ -61,6 +61,11 @@ def main():
     # The final classifier
     classifier = nn.Softmax(dim=1)
 
+    if torch.cuda.is_available():
+        device = torch.device('cuda:{0}'.format(args.gpu))
+    else:
+        device = torch.device('cpu')
+
     try:
         weights = torch.load(args.checkpoint)
     except (Exception,):
@@ -69,12 +74,8 @@ def main():
 
     model.load_state_dict(weights["model"])
 
-    if torch.cuda.is_available():
-        vision_model.cuda()
-        model.cuda()
-
-    vision_model.eval()
-    model.eval()
+    vision_model.eval().to(device)
+    model.eval().to(device)
 
     img_transforms = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -88,8 +89,7 @@ def main():
     img = img_transforms(im)
     img = img.unsqueeze(0)  # add batch dimension
 
-    if torch.cuda.is_available():
-        img = img.cuda()
+    img = img.to(device)
 
     img_features = vision_model(img)
 
@@ -103,8 +103,7 @@ def main():
     #     one_hot_vec[k, q['question_wids'][k]] = 1
 
     # q = torch.from_numpy(one_hot_vec)
-    if torch.cuda.is_available():
-        q = q.cuda()
+    q = q.to(device)
 
     # Add the batch dimension
     q = q.unsqueeze(0).long()
