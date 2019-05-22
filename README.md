@@ -1,4 +1,4 @@
-# VQA
+# VisualQA
 
 Visual Question Answering in PyTorch
 
