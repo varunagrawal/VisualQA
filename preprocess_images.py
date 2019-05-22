@@ -1,16 +1,18 @@
 """
-Script to generate embedding of images from COCO imags using VGG16
+Script to generate image embeddings from COCO images using a specified architecture
 """
 
 import argparse
 import json
-import torch
-from torchvision import transforms
-from torch.utils import data
-from tqdm import tqdm
-from PIL import Image
 import os
 import os.path as osp
+
+import torch
+from PIL import Image
+from torch.utils import data
+from torchvision import transforms
+from tqdm import tqdm
+
 import utils.image
 
 
@@ -53,13 +55,14 @@ def arguments():
                         help="Path to the train/val root directory of images")
     parser.add_argument("--split",
                         default="train", choices=("train", "val"))
+    parser.add_argument("--gpu", type=int, default=0)
 
     return parser.parse_args()
 
 
-def main(coco_dataset_file, root, split, arch):
+def main(coco_dataset_file, root, split, arch, gpu):
     if torch.cuda.is_available():
-        device = torch.device('cuda:0')
+        device = torch.device('cuda:{0}'.format(gpu))
     else:
         device = torch.device('cpu')
 
@@ -79,8 +82,7 @@ def main(coco_dataset_file, root, split, arch):
     model, layer = utils.image.get_model(arch)
     print("Conv Net Model", arch, layer)
 
-    model = model.eval()
-    model = model.to(device)
+    model = model.eval().to(device)
 
     embeddings = {}
 
@@ -99,9 +101,13 @@ def main(coco_dataset_file, root, split, arch):
     except FileExistsError:
         pass
 
-    image_embedding_file = "coco_{0}_{1}_{2}.pth".format(split, arch, layer)
-    torch.save(embeddings, osp.join("image_embeddings", image_embedding_file))
+    print("Saving image embedddings")
+    image_embedding_file = osp.join("image_embeddings",
+                                    "coco_{0}_{1}_{2}.pth".format(split, arch, layer))
+    torch.save(embeddings, image_embedding_file)
+    print("Saved to {}".format(image_embedding_file))
 
 
-args = arguments()
-main(args.file, args.root, args.split, arch=args.arch)
+if __name__ == "__main__":
+    args = arguments()
+    main(args.file, args.root, args.split, arch=args.arch, gpu=args.gpu)

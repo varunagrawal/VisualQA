@@ -1,14 +1,15 @@
 import os.path as osp
+
+import torch
+from torch import nn, optim
+from torch.optim import lr_scheduler
+from torchvision import transforms
+
 import dataset
-from models.model import Models
 import trainer
 import visualize
-import torch
-from torch import optim
-from torch.optim import lr_scheduler
-from torch import nn
-from torchvision import transforms
 from arguments import parse_args
+from models.model import Models
 
 
 def main():

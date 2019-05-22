@@ -3,4 +3,3 @@ def accuracy(output, target):
     acc = indices.eq(target).float().sum()
     acc = acc / target.size(0)
     return acc
-

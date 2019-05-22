@@ -1,15 +1,16 @@
 import json
-import pickle
-from collections import Counter
-import torch
-import torch.utils.data as data
-from utils import text
 import os
 import os.path as osp
+import pickle
+from collections import Counter
+
 import numpy as np
-from utils.image import coco_name_format
+import torch
+import torch.utils.data as data
 from PIL import Image
-import h5py
+
+from utils import text
+from utils.image import coco_name_format
 
 
 def collate_fn(batch):
@@ -18,10 +19,12 @@ def collate_fn(batch):
     return data.dataloader.default_collate(batch)
 
 
-def get_dataloader(annotations, questions, images, args, split="train", maps=None, vocab=None, raw_images=False,
-                   transforms=None, shuffle=True):
-    return data.DataLoader(VQADataset(annotations, questions, images, split, args, raw_images=raw_images,
-                                      vocab=vocab, transforms=transforms, maps=maps),
+def get_dataloader(annotations, questions, images, args,
+                   split="train", maps=None, vocab=None,
+                   raw_images=False, transforms=None, shuffle=True):
+    return data.DataLoader(VQADataset(annotations, questions, images, split, args,
+                                      raw_images=raw_images, vocab=vocab,
+                                      transforms=transforms, maps=maps),
                            batch_size=args.batch_size,
                            num_workers=args.num_workers,
                            shuffle=shuffle,
@@ -29,7 +32,8 @@ def get_dataloader(annotations, questions, images, args, split="train", maps=Non
 
 
 class VQADataset(data.Dataset):
-    def __init__(self, annotations, questions, images_dataset, split, args, raw_images=False, transforms=None,
+    def __init__(self, annotations, questions, images_dataset, split, args,
+                 raw_images=False, transforms=None,
                  vocab=None, normalize_img=True, maps=None, year=2014):
 
         # the data is saved as a dict where the key is the image_id and the value is the VGG feature vector
@@ -71,7 +75,8 @@ class VQADataset(data.Dataset):
 
         if self.raw_images:
             item["image_id"] = d["image_id"]
-            img = Image.open(osp.join(osp.expanduser(self.root), "{0}{1}".format(self.split, self.year),
+            img = Image.open(osp.join(osp.expanduser(self.root),
+                                      "{0}{1}".format(self.split, self.year),
                                       d["image_name"]))
             img = img.convert(mode='RGB')
 
