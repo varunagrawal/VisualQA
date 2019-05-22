@@ -107,3 +107,6 @@ ENV/
 
 weights/*
 *.pickle
+
+*.png
+*.jpg
