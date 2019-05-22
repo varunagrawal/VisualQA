@@ -3,6 +3,7 @@ Implementation of MultiLinear Compact Bilinear Pooling model
 [https://arxiv.org/pdf/1606.01847.pdf]
 """
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -25,7 +26,8 @@ class MulitmodalCompactBilinearPool(nn.Module):
             # C tensor performs the mapping of the h vector and stores the s vector values as well
             C = torch.zeros(original_dim, projection_dim)
             for i in range(original_dim):
-                C[i, torch.randint(0, projection_dim-1)] = 2 * torch.randint(0, 2) - 1  # s values
+                C[i, np.random.randint(0, projection_dim-1)] = 2 * \
+                    np.random.randint(0, 2) - 1  # s values
 
             self.C.append(C)
 
