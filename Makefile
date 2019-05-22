@@ -1,5 +1,3 @@
-# Using `pipenv` is highly recommended
-# pipenv shell
 .RECIPEPREFIX +=
 
 ROOT=~/datasets/VQA2
