@@ -78,8 +78,8 @@ def main():
                                         shuffle=False, transforms=val_transform)
 
     arch = Models[args.arch].value
-    model = arch(len(vocab), output_dim=args.top_answer_limit,
-                 raw_images=args.raw_images)
+    model = arch(len(vocab), image_dim=args.image_dim,
+                 output_dim=args.top_answer_limit, raw_images=args.raw_images)
 
     if args.resume:
         state = torch.load(args.resume)
