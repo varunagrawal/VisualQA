@@ -44,6 +44,8 @@ class VQADataset(data.Dataset):
         self.split = split
         self.year = year
 
+        self.top_answer_limit = args.top_answer_limit
+
         self._process_dataset(annotations, questions, args, split, maps=maps)
 
         if vocab:
@@ -63,7 +65,7 @@ class VQADataset(data.Dataset):
         """
         self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans = \
             process_vqa_dataset(questions, annotations, split,
-                                maps, args.top_answer_limit, args.max_length)
+                                maps, self.top_answer_limit, args.max_length)
 
     def __len__(self):
         return len(self.data)
@@ -114,7 +116,10 @@ class VQADataset(data.Dataset):
         item['answer_type'] = d['answer_type']
 
         if self.split == "train":
-            item['answer_id'] = d['answer_id']
+            # create a vector and set the correct ans index to 1
+            ans = torch.zeros(self.top_answer_limit)
+            ans[d['answer_id']] = 1
+            item['answer'] = ans
 
         return item
 

@@ -20,7 +20,7 @@ def train(model, dataloader, criterion, optimizer, epoch, args, device, vis=None
         q = sample['question']
         lengths = sample['question_len']
         img = sample["image"]
-        ans_label = sample['answer_id']
+        ans_label = sample['answer']
 
         q = q.to(device)
         img = img.to(device)
@@ -65,7 +65,7 @@ def evaluate(model, dataloader, criterion, epoch, args, device, vis=None):
         lengths = sample['question_len']
         img = sample["image"]
 
-        ans_label = sample['answer_id']
+        ans_label = sample['answer']
 
         q = q.to(device)
         img = img.to(device)

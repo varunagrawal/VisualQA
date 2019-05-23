@@ -28,7 +28,8 @@ def preprocess_questions(dataset, method="nltk", display=True):
 
 def get_vocabulary(dataset, min_word_count=0):
     """
-    Filter out words in the questions that are <= min_word_count and create a vocabulary from the filtered words
+    Filter out words in the questions that are <= min_word_count
+    and create a vocabulary from the filtered words.
     :param dataset: The VQA dataset
     :param min_word_count: The minimum number of counts the word needs in order to be included
     :return:
@@ -64,7 +65,7 @@ def remove_tail_words(dataset, vocab, display=True):
 
 def encode_questions(dataset, word_to_wid, max_length=25, display=True):
     """
-    Encode each question into a vector of size Max_Length x Vocab_Size
+    Encode each question into a vector of size Max_Length x Vocab_Size.
     :param dataset:
     :param word_to_wid:
     :param max_length
@@ -100,10 +101,6 @@ def get_top_answers(dataset, top=1000, display=True):
     ans_counts = sorted([(count, ans)
                          for ans, count in counts.items()], reverse=True)
     top_answers = []
-
-    # If `top` is negative, we use all answers
-    if top <= 0:
-        top len(counts)
 
     for i in range(top):
         top_answers.append(ans_counts[i][1])
