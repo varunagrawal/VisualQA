@@ -56,7 +56,8 @@ def main():
                                         shuffle=False, transforms=val_transform)
 
     arch = Models[args.arch].value
-    model = arch(len(vocab), output_dim=args.top_answer_limit, raw_images=args.raw_images)
+    model = arch(len(vocab), image_dim=args.image_dim,
+                 output_dim=args.top_answer_limit, raw_images=args.raw_images)
 
     if args.resume:
         state = torch.load(args.resume)
@@ -69,7 +70,8 @@ def main():
 
     # optimizer = optim.Adam(model.parameters(), lr=args.lr, betas=tuple(args.betas), weight_decay=args.weight_decay)
     optimizer = optim.RMSprop(model.parameters(), lr=args.lr)
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=args.decay_interval, gamma=args.lr_decay)
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=args.decay_interval,
+                                    gamma=args.lr_decay)
 
     if args.visualize:
         vis = visualize.Visualizer(args.port)
@@ -82,7 +84,8 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
 
-        trainer.train(model, vqa_loader, criterion, optimizer, epoch, args, device, vis=vis)
+        trainer.train(model, vqa_loader, criterion,
+                      optimizer, epoch, args, device, vis=vis)
         # trainer.evaluate(model, val_loader, criterion, epoch, args, device, vis=vis)
 
     print("Training complete!")

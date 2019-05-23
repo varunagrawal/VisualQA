@@ -9,26 +9,28 @@ from models import extractor
 
 
 class DeeperLSTM(nn.Module):
-    def __init__(self, vocab_size, embed_dim=300, image_dim=4096,
-                 image_embed_dim=1024, hidden_dim=512, rnn_output_dim=1024,
-                 output_dim=1000, batch_first=True, raw_images=False):
+    def __init__(self, vocab_size, image_dim=4096, image_embed_dim=1024,
+                 word_embed_dim=300, hidden_dim=512, rnn_output_dim=1024,
+                 output_dim=1000, batch_first=True, raw_images=False, extractor_arch="vgg19_bn"):
         """
 
         :param vocab_size: The number of words in the vocabulary
-        :param embed_dim: The question embedding dimensionality
         :param image_dim: The image feature dimensionality
         :param image_embed_dim: The image embedding dimensionality
+        :param word_embed_dim: The question embedding dimensionality
         :param hidden_dim: The dimensionality of the RNN's hidden state
         :param rnn_output_dim: The RNN output dimensionality
         :param output_dim: The number of answers to output over.
         :param batch_first: Flag to indicate if the RNN accepts input with batch dim leading.
+        :param extractor_arch: String indicating the architecture to use for 
+         image feature extraction.
         """
         super().__init__()
 
         self.raw_images = raw_images
         if raw_images:
             # base model uses VGG19
-            self.feature_extractor = extractor.FeatureExtractor("vgg19_bn")
+            self.feature_extractor = extractor.FeatureExtractor(extractor_arch)
 
         self.hidden_dim = hidden_dim
 
@@ -36,7 +38,7 @@ class DeeperLSTM(nn.Module):
         vocab_size = vocab_size + 1
 
         self.embedding = nn.Sequential(
-            nn.Embedding(vocab_size, embed_dim, padding_idx=0),
+            nn.Embedding(vocab_size, word_embed_dim, padding_idx=0),
             nn.Dropout(p=0.5),
             nn.Tanh())
 
@@ -45,7 +47,7 @@ class DeeperLSTM(nn.Module):
         self.batch_first = batch_first
         self.hidden_dim = hidden_dim
 
-        self.rnn = nn.LSTM(embed_dim, hidden_dim,
+        self.rnn = nn.LSTM(word_embed_dim, hidden_dim,
                            num_layers=self.num_rnn_layers,
                            batch_first=self.batch_first)
 
