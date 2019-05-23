@@ -14,7 +14,7 @@ VAL_IMGS=image_embeddings/coco_val_resnet152_pool5.pth
 IMAGE_DIM=2048
 
 IMAGE_ROOT=~/datasets/coco
-ARCH=DeeperLSTM
+ARCH=VQAX
 BATCH=128
 WORKERS=8
 
@@ -24,7 +24,7 @@ main: train evaluate
 
 train:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
-    --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT) --image_dim $(IMAGE_DIM)
+    --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT) --image_dim $(IMAGE_DIM) --top_answer_limit 22531
 
 train_mcb:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
