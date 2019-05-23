@@ -17,14 +17,15 @@ IMAGE_ROOT=~/datasets/coco
 ARCH=VQAX
 BATCH=128
 WORKERS=8
+NUM_ANSWERS=22531
 
-CHECKPOINT=weights/vqa_checkpoint_DeeperLSTM_200.pth
+CHECKPOINT=weights/vqa_checkpoint_VQAX_200.pth
 
 main: train evaluate
 
 train:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
-    --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT) --image_dim $(IMAGE_DIM) --top_answer_limit 22531
+    --arch $(ARCH) --batch_size ${BATCH} --num_workers ${WORKERS} --image_root $(IMAGE_ROOT) --image_dim $(IMAGE_DIM) --top_answer_limit $(NUM_ANSWERS)
 
 train_mcb:
     python main.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
@@ -40,7 +41,7 @@ options:
 
 evaluate:
     python evaluate.py $(TRAIN_ANN) $(TRAIN_QUES) $(VAL_ANN) $(VAL_QUES) --images $(TRAIN_IMGS) --val_images $(VAL_IMGS) \
-      --batch_size 1 --resume $(CHECKPOINT) --num_workers ${WORKERS} --image_dim $(IMAGE_DIM)
+      --arch $(ARCH) --batch_size 1 --resume $(CHECKPOINT) --num_workers ${WORKERS} --image_dim $(IMAGE_DIM) --top_answer_limit $(NUM_ANSWERS)
 
 preprocess_train:
     python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_train2014.json --root $(IMAGE_ROOT) --split train --arch resnet152
