@@ -23,7 +23,8 @@ def get_model(arch):
 
     elif arch == 'resnet152':
         model = models.resnet152(pretrained=True)
-        modules = list(model.children())[:-2]
+        # get features after the last AvgPool
+        modules = list(model.children())[:-1]
         model = torch.nn.Sequential(*modules)
         layer = "pool5"
 
