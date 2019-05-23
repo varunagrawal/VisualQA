@@ -10,7 +10,7 @@ VAL_QUES=${ROOT}/v2_OpenEnded_mscoco_val2014_questions.json
 VAL_IMGS=image_embeddings/coco_val_resnet152_pool5.pth
 
 # change this depending on the feature extractor used
-# VGG models have dim 1024, Resnet has 2048
+# VGG models have dim 4096, Resnet has 2048
 IMAGE_DIM=2048
 
 IMAGE_ROOT=~/datasets/coco
@@ -43,10 +43,10 @@ evaluate:
       --batch_size 1 --resume $(CHECKPOINT) --num_workers ${WORKERS} --image_dim $(IMAGE_DIM)
 
 preprocess_train:
-    python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_train2014.json --root $(IMAGE_ROOT) --split train
+    python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_train2014.json --root $(IMAGE_ROOT) --split train --arch resnet152
 
 preprocess_val:
-    python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_val2014.json --root $(IMAGE_ROOT) --split val
+    python preprocess_images.py $(IMAGE_ROOT)/annotations/instances_val2014.json --root $(IMAGE_ROOT) --split val --arch resnet152
 
 demo:
     python demo.py demo_img.jpg "what room is this?" $(TRAIN_QUES) $(TRAIN_ANN) --checkpoint $(CHECKPOINT)
