@@ -63,7 +63,7 @@ def main():
         state = torch.load(args.resume)
         model.load_state_dict(state["model"])
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.MultiLabelSoftMarginLoss(reduction='sum')
 
     model = model.to(device)
     criterion = criterion.to(device)
