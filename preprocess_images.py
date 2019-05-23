@@ -77,7 +77,7 @@ def main(coco_dataset_file, root, split, arch, gpu):
 
     data_loader = data.DataLoader(COCODataset(coco_dataset_file, root=root,
                                               transform=transform, split=split),
-                                  batch_size=1, shuffle=False, num_workers=4)
+                                  batch_size=64, shuffle=False, num_workers=4)
 
     model, layer = utils.image.get_model(arch)
     print("ConvNet Model", arch, layer)
@@ -89,10 +89,15 @@ def main(coco_dataset_file, root, split, arch, gpu):
     print("Starting")
     with torch.no_grad():
 
-        for idx, (img, idt) in enumerate(tqdm(data_loader, total=len(data_loader))):
+        for img, idt in tqdm(data_loader, total=len(data_loader)):
             img = img.to(device)
             embedding = model(img)
-            embeddings[idt.item()] = embedding.cpu()
+
+            # ensure embeddings are NxD
+            embedding = embedding.reshape(img.shape[0], -1)
+
+            for idx in range(img.size(0)):
+                embeddings[idt[idx].item()] = embedding[idx, ...].cpu()
 
     print("Done computing image embeddings")
 
