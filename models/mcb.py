@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from models import extractor
+from VisualQA.models import extractor
 
 
 class MulitmodalCompactBilinearPool(nn.Module):

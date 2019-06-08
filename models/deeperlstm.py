@@ -5,7 +5,7 @@ A Deeper LSTM Q model as detailed in the VQA paper by Agrawal et. al.
 import torch
 from torch import nn
 from torch.nn import utils
-from models import extractor
+from VisualQA.models import extractor
 
 
 class DeeperLSTM(nn.Module):

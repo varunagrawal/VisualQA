@@ -5,7 +5,7 @@ A VQA model using eXtreme Classification.
 import torch
 from torch import nn
 from torch.nn import utils
-from models import extractor
+from VisualQA.models import extractor
 
 
 class VQAX(nn.Module):
