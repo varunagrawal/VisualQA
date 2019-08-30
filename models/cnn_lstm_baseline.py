@@ -71,6 +71,9 @@ class CNN_LSTM(nn.Module):
             nn.Linear(output_dim, output_dim)
         )
 
+        # The final classifier
+        self.classifier = nn.Softmax(dim=1)
+
         self.init_weights()
 
     def init_weights(self):
@@ -111,7 +114,8 @@ class CNN_LSTM(nn.Module):
         # initial hidden state defaults to 0
         output, (hidden_state, cell) = self.rnn(q)
 
-        # convert from NxBxD to BxNxD and make contiguous, where N is the number of layers in the RNN
+        # convert from NxBxD to BxNxD and make contiguous,
+        # where N is the number of layers in the RNN
         hidden_state, cell = hidden_state.transpose(0, 1).contiguous(), \
             cell.transpose(0, 1).contiguous()
         # Make from [B, n_layers, hidden_dim] to [B, n_layers*hidden_dim]
@@ -131,4 +135,7 @@ class CNN_LSTM(nn.Module):
         # Classification
         output = self.mlp(x)
 
-        return output
+        if self.training:
+            return output
+        else:
+            return self.classifier(output)

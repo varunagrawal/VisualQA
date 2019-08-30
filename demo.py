@@ -58,8 +58,6 @@ def main():
     vision_model, _ = image.get_model(args.embedding_arch)
     # Get our VQA model
     model = Models[args.model].value(len(vocab))
-    # The final classifier
-    classifier = nn.Softmax(dim=1)
 
     if torch.cuda.is_available():
         device = torch.device('cuda:{0}'.format(args.gpu))

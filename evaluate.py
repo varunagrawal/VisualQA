@@ -29,9 +29,6 @@ def evaluate(model, dataloader, aid_to_ans, device):
 
         output = model(img, q, lengths)
 
-        # this is not needed but we want to be numerically stable
-        output = functional.softmax(output, dim=1)
-
         ans = torch.max(output.cpu(), dim=1)[1]
 
         results.append(

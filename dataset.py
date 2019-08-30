@@ -14,7 +14,7 @@ from utils.image import coco_name_format
 
 
 def collate_fn(batch):
-    # Sort batch (list) on question lengths for use in RNN pack_padded_sequence later
+    """Sort batch (list) on question lengths for use in RNN pack_padded_sequence later."""
     batch.sort(key=lambda x: x['question_len'], reverse=True)
     return data.dataloader.default_collate(batch)
 
@@ -36,7 +36,8 @@ class VQADataset(data.Dataset):
                  raw_images=False, transforms=None,
                  vocab=None, normalize_img=True, maps=None, year=2014):
 
-        # the data is saved as a dict where the key is the image_id and the value is the VGG feature vector
+        # the data is saved as a dict where the key is the image_id
+        # and the value is the VGG feature vector
         if not raw_images:
             self.images_dataset = torch.load(images_dataset)
             print("Loaded {0} image embeddings dataset".format(split))
@@ -61,7 +62,8 @@ class VQADataset(data.Dataset):
         Process the dataset and load it up.
         We should only do this for the training set.
         """
-        self.data, self.vocab, self.word_to_wid, self.wid_to_word, self.ans_to_aid, self.aid_to_ans = \
+        self.data, self.vocab, self.word_to_wid, self.wid_to_word, \
+            self.ans_to_aid, self.aid_to_ans = \
             process_vqa_dataset(questions, annotations, split,
                                 maps, args.top_answer_limit, args.max_length)
 
@@ -127,7 +129,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
     :param questions_file:
     :param annotations_file:
     :param split: The dataset split.
-    :param maps: Dict containing various mappings such as word_to_wid, wid_to_word, ans_to_aid and aid_to_ans.
+    :param maps: Dict containing various mappings such as \
+        word_to_wid, wid_to_word, ans_to_aid and aid_to_ans.
     :param top_answer_limit:
     :param max_length: The maximum quetsion length. Taken from the VQA sample code.
     :param year: COCO Dataset release year.
@@ -175,7 +178,8 @@ def process_vqa_dataset(questions_file, annotations_file, split, maps=None,
             dataset.append(d)
 
         if split == "train":
-            # Get the top N answers so we can filter the dataset to only questions with these answers
+            # Get the top N answers so we can filter the dataset
+            # to only questions with these answers
             top_answers = text.get_top_answers(dataset, top_answer_limit)
             dataset = text.filter_dataset(dataset, top_answers)
 

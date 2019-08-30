@@ -98,6 +98,9 @@ class MCBModel(nn.Module):
         )
         self.classification = nn.Linear(mcb_dim, output_dim)
 
+        # The final classifier
+        self.classifier = nn.Softmax(dim=1)
+
     def forward(self, img, ques, q_lens):
         if self.raw_images:
             with torch.no_grad():
@@ -152,6 +155,9 @@ class MCBModel(nn.Module):
 
         # L2 normalization
         y = y / torch.norm(y, p=2).detach()
-        y = self.classification(y)
+        output = self.classification(y)
 
-        return y
+        if self.training:
+            return output
+        else:
+            return self.classifier(output)
