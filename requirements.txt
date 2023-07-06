@@ -22,7 +22,7 @@ pycparser==2.19
 pygments==2.7.4
 pyzmq==18.0.1
 requests==2.21.0
-scipy==1.2.1
+scipy==1.10.0
 six==1.12.0
 torch==1.13.1
 torchfile==0.1.0
