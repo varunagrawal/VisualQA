@@ -1,6 +1,6 @@
 -i https://pypi.python.org/simple
 backcall==0.1.0
-certifi==2022.12.7
+certifi==2023.7.22
 cffi==1.12.3
 chardet==3.0.4
 colorama==0.4.1
