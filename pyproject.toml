@@ -1,0 +1,35 @@
+[project]
+name = "VisualQA"
+version = "1.0.0" 
+
+description = "Visual Question Answering in PyTorch"
+readme = "README.md"
+authors = [
+    { name = "Varun Agrawal", email = "varagrawal@gmail.com" }
+]
+requires-python = ">= 3.11"
+dependencies = [
+  "nltk>=3.9.2",
+  "numpy>=2.0.0",
+  "pillow>=12.0.0",
+  "torch>=2.6.0",
+  "torchvision>=0.24",
+  "tqdm>=4.67.1",
+  "visdom>=0.2.4",
+]
+
+classifiers = [
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/varunagrawal/VisualQA"
+Repository = "https://github.com/varunagrawal/VisualQA"
+

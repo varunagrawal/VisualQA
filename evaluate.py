@@ -1,13 +1,13 @@
-import os.path as osp
-import dataset
-from models.model import Models
-import numpy as np
-import torch
-from torch.nn import functional
-from torchvision import transforms
-from arguments import parse_args
-from tqdm import tqdm
 import json
+import os.path as osp
+
+import torch
+from torchvision import transforms
+from tqdm import tqdm
+
+import dataset
+from arguments import parse_args
+from models.model import Models
 
 
 @torch.no_grad()

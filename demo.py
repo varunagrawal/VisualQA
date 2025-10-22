@@ -1,25 +1,25 @@
 import argparse
+
+import torch
+from PIL import Image, ImageDraw,
+from torchvision import transforms
+
+from dataset import process_vqa_dataset
 from models import Models
 from utils import image, text
-from PIL import Image, ImageFont, ImageDraw
-import numpy as np
-import torch
-from torch import nn
-from torchvision import transforms
-from dataset import process_vqa_dataset
 
 
 def parse_args():
     parser = argparse.ArgumentParser("VQA Demo")
     parser.add_argument("image", help="Path to image file")
     parser.add_argument("question", help="Question text")
-    parser.add_argument(
-        "questions", help="Path to VQA Questions training file")
-    parser.add_argument(
-        "annotations", help="Path to COCO Annotations training file")
+    parser.add_argument("questions",
+                        help="Path to VQA Questions training file")
+    parser.add_argument("annotations",
+                        help="Path to COCO Annotations training file")
     parser.add_argument("--model", default="DeeperLSTM")
-    parser.add_argument(
-        "--checkpoint", default="weights/deeper_lstm_best_weights.pth.tar")
+    parser.add_argument("--checkpoint",
+                        default="weights/deeper_lstm_best_weights.pth.tar")
     parser.add_argument("--preprocessed_cache",
                         default="vqa_train_dataset_cache.pickle")
     parser.add_argument("--embedding_arch", default="vgg19_bn")
@@ -66,8 +66,10 @@ def main():
 
     try:
         weights = torch.load(args.checkpoint)
-    except (Exception,):
-        print("ERROR: Default weights missing. Please specify weights for the VQA model")
+    except (Exception, ):
+        print(
+            "ERROR: Default weights missing. Please specify weights for the VQA model"
+        )
         exit(0)
 
     model.load_state_dict(weights["model"])
